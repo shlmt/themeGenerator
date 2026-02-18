@@ -803,11 +803,46 @@
     background: var(--border);
   }
 
-  /* Auto-generate button animation */
-  @keyframes spin {
-    to { transform: rotate(360deg); }
+  /* Custom color picker popover */
+  .color-trigger-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
   }
-  .spinning { animation: spin 0.6s linear; }
+  .color-trigger-swatch {
+    width: 52px;
+    height: 52px;
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--border);
+    cursor: pointer;
+    transition: border-color 0.15s, transform 0.1s;
+    flex-shrink: 0;
+  }
+  .color-trigger-swatch:hover { border-color: var(--border-strong); transform: scale(1.04); }
+  .color-popover {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    z-index: 300;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    padding: 12px;
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    width: 220px;
+  }
+  .color-popover.open { display: flex; }
+  .color-popover input[type="color"] {
+    width: 100%;
+    height: 90px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    padding: 0;
+  }
 
   /* Palette overview bar */
   .palette-overview {
@@ -831,6 +866,13 @@
   <div class="header-left">
     <span class="logo">🎨 Theme Builder</span>
     <span class="badge">Refactoring UI Method</span>
+    <a href="https://refactoringui.com/previews/building-your-color-palette/" target="_blank" rel="noopener"
+       style="font-size:11px;color:var(--text-muted);text-decoration:none;display:flex;align-items:center;gap:4px;padding:3px 8px;border:1px solid var(--border);border-radius:20px;transition:all 0.12s;"
+       onmouseover="this.style.borderColor='var(--border-strong)';this.style.color='var(--text)'"
+       onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
+      <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M5 2H2v8h8V7M7 1h4m0 0v4m0-4L5.5 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Read the article
+    </a>
   </div>
   <div class="header-right">
     <button class="btn btn-secondary btn-sm" onclick="resetAll()">↺ Reset</button>
@@ -867,7 +909,6 @@
             <div class="editor-title" id="editorGroupName">Grey</div>
             <div style="font-size:11px; color: var(--text-faint);" id="editorGroupDesc">Text, backgrounds, panels, form controls</div>
           </div>
-          <button class="btn btn-secondary btn-sm" onclick="autoGenerate()" id="autoGenBtn">⚡ Auto-Generate Shades</button>
         </div>
         <div class="editor-body" id="editorBody">
           <!-- dynamic content -->
@@ -894,21 +935,36 @@
   <div class="modal">
     <h3>Add Color Group</h3>
     <p>Choose the type of color group to add to your palette.</p>
-    <div class="type-grid">
+    <div class="type-grid" style="grid-template-columns:repeat(3,1fr);">
       <div class="type-option selected" data-type="grey" onclick="selectType('grey',this)">
-        <div class="type-icon">⬜</div>
-        <div class="type-name">Greys</div>
-        <div class="type-desc">UI backgrounds & text</div>
+        <div class="type-icon">◻</div>
+        <div class="type-name">Neutral</div>
+        <div class="type-desc">Backgrounds & text</div>
       </div>
       <div class="type-option" data-type="primary" onclick="selectType('primary',this)">
-        <div class="type-icon">🔵</div>
+        <div class="type-icon">◆</div>
         <div class="type-name">Primary</div>
-        <div class="type-desc">Brand color</div>
+        <div class="type-desc">Brand / CTA color</div>
       </div>
-      <div class="type-option" data-type="accent" onclick="selectType('accent',this)">
-        <div class="type-icon">✨</div>
-        <div class="type-name">Accent</div>
-        <div class="type-desc">Semantic / highlights</div>
+      <div class="type-option" data-type="error" onclick="selectType('error',this)">
+        <div class="type-icon">✕</div>
+        <div class="type-name">Error</div>
+        <div class="type-desc">Destructive / critical</div>
+      </div>
+      <div class="type-option" data-type="warning" onclick="selectType('warning',this)">
+        <div class="type-icon">!</div>
+        <div class="type-name">Warning</div>
+        <div class="type-desc">Caution states</div>
+      </div>
+      <div class="type-option" data-type="success" onclick="selectType('success',this)">
+        <div class="type-icon">✓</div>
+        <div class="type-name">Success</div>
+        <div class="type-desc">Positive / confirmed</div>
+      </div>
+      <div class="type-option" data-type="highlight" onclick="selectType('highlight',this)">
+        <div class="type-icon">★</div>
+        <div class="type-name">Highlight</div>
+        <div class="type-desc">Feature / promo badges</div>
       </div>
     </div>
     <div class="form-group">
@@ -1044,7 +1100,9 @@ function uid() { return Math.random().toString(36).slice(2,8); }
 
 function addGroup(name, type, baseHex) {
   const id = uid();
-  const shades = generateShades(baseHex, type);
+  // normalize to generation category
+  const genType = type === 'grey' ? 'grey' : 'primary';
+  const shades = generateShades(baseHex, genType);
   groups.push({ id, name, type, baseHex, shades });
   renderSidebar();
   setActiveGroup(id);
@@ -1077,18 +1135,17 @@ function getActiveGroup() {
 function addDefaultGroups() {
   addGroup('Neutral', 'grey', '#718096');
   addGroup('Primary', 'primary', '#2563eb');
-  addGroup('Error', 'accent', '#dc2626');
-  addGroup('Success', 'accent', '#16a34a');
-  addGroup('Warning', 'accent', '#d97706');
+  addGroup('Error', 'error', '#dc2626');
+  addGroup('Warning', 'warning', '#d97706');
+  addGroup('Success', 'success', '#16a34a');
+  addGroup('Highlight', 'highlight', '#7c3aed');
 }
 
 function resetAll() {
-  if(!confirm('Reset all color groups?')) return;
+  if(!confirm('Reset all groups and start fresh?')) return;
   groups = [];
   activeGroupId = null;
-  renderSidebar();
-  renderEditor();
-  renderExport();
+  addDefaultGroups();
 }
 
 // ==================== RENDER SIDEBAR ====================
@@ -1102,23 +1159,13 @@ function renderSidebar() {
 
   // Semantic role labels in sidebar
   const roleLabel = (g) => {
-    if(g.type==='grey') return 'Neutral';
-    if(g.type==='primary') return 'Primary';
-    const lower = g.name.toLowerCase();
-    if(/(error|danger|red)/.test(lower)) return 'Error';
-    if(/(success|green)/.test(lower)) return 'Success';
-    if(/(warn|yellow|orange)/.test(lower)) return 'Warning';
-    return 'Accent';
+    const labels = { grey:'Neutral', primary:'Primary', error:'Error', warning:'Warning', success:'Success', highlight:'Highlight', accent:'Accent' };
+    return labels[g.type] || 'Accent';
   };
 
   const roleIcon = (g) => {
-    if(g.type==='grey') return '◻';
-    if(g.type==='primary') return '◆';
-    const lower = g.name.toLowerCase();
-    if(/(error|danger|red)/.test(lower)) return '✕';
-    if(/(success|green)/.test(lower)) return '✓';
-    if(/(warn|yellow|orange)/.test(lower)) return '!';
-    return '●';
+    const icons = { grey:'◻', primary:'◆', error:'✕', warning:'!', success:'✓', highlight:'★', accent:'●' };
+    return icons[g.type] || '●';
   };
 
   el.innerHTML = groups.map(g => {
@@ -1143,45 +1190,94 @@ function renderSidebar() {
 // ==================== RENDER EDITOR ====================
 
 const typeDescriptions = {
-  grey: 'Text, backgrounds, panels, form controls — almost everything in an interface',
-  primary: 'Used for primary actions, emphasizing navigation elements, and determining the overall look',
-  accent: 'Communicates different states: success, warning, error, or highlights a feature'
+  grey:      'Text, backgrounds, panels, form controls — almost everything in an interface',
+  primary:   'Used for primary actions, emphasizing navigation elements, and determining the overall look',
+  error:     'Destructive actions, validation errors, critical alerts — must be immediately clear',
+  warning:   'Cautionary states, non-critical issues, degraded conditions that need attention',
+  success:   'Confirmed actions, completed states, positive feedback — green-light signal',
+  highlight: 'Feature callouts, "New" badges, promotional banners — grabs attention without alarm',
+  accent:    'Secondary semantic color — communicates a distinct state or category',
 };
 
+// Per-semantic-role shade hints
 const typeHints = {
   grey: {
-    100: 'Off-white backgrounds, very subtle tints',
-    200: 'Subtle backgrounds, zebra stripes',
-    300: 'Borders, dividers, disabled states',
-    400: 'Placeholder text, icons (muted)',
-    500: 'Subtext, captions, muted labels',
-    600: 'Body text (secondary)',
-    700: 'Body text (primary)',
-    800: 'Headings, strong text',
-    900: 'Darkest text, near-black',
+    100: 'Page / app background',
+    200: 'Card & panel surface',
+    300: 'Borders, dividers',
+    400: 'Disabled & placeholder',
+    500: 'Muted labels, captions',
+    600: 'Secondary body text',
+    700: 'Primary body text',
+    800: 'Headings',
+    900: 'Near-black — darkest text',
   },
   primary: {
-    100: 'Tinted alert backgrounds, hover bg',
-    200: 'Chip backgrounds, tags',
-    300: 'Disabled button color',
-    400: 'Hover state of outline buttons',
-    500: 'Button background (primary), links',
-    600: 'Button hover state',
-    700: 'Darker text accents',
-    800: 'Very dark tinted backgrounds',
-    900: 'Text on light primary backgrounds',
+    100: 'Tinted background (hover, selected row)',
+    200: 'Tag / chip background',
+    300: 'Disabled primary button',
+    400: 'Outline button hover',
+    500: 'Primary button, links ← BASE',
+    600: 'Primary button :hover',
+    700: 'Primary button :active',
+    800: 'Dark-mode button surface',
+    900: 'Text on light-primary bg',
+  },
+  error: {
+    100: 'Error banner background',
+    200: 'Hover tint on error row',
+    300: 'Error input border',
+    400: 'Error icon (on light bg)',
+    500: 'Error icon / badge ← BASE',
+    600: 'Error button bg',
+    700: 'Error text on light bg',
+    800: 'Error heading on light bg',
+    900: 'Error text on tinted bg',
+  },
+  warning: {
+    100: 'Warning banner background',
+    200: 'Warning row hover tint',
+    300: 'Warning border / outline',
+    400: 'Warning icon (on light bg)',
+    500: 'Warning icon / badge ← BASE',
+    600: 'Warning button bg',
+    700: 'Warning text on light bg',
+    800: 'Warning label on light bg',
+    900: 'Warning text on tinted bg',
+  },
+  success: {
+    100: 'Success banner background',
+    200: 'Checked-row tint',
+    300: 'Success border / outline',
+    400: 'Success icon (on light bg)',
+    500: 'Success icon / badge ← BASE',
+    600: 'Success button bg',
+    700: 'Success text on light bg',
+    800: 'Success label on light bg',
+    900: 'Success text on tinted bg',
+  },
+  highlight: {
+    100: '"New" feature banner bg',
+    200: 'Promo tag background',
+    300: 'Highlight border',
+    400: 'Highlight icon (light bg)',
+    500: '"New" badge / promo pill ← BASE',
+    600: 'Highlight button bg',
+    700: 'Highlight text on light bg',
+    800: 'Highlight label on light bg',
+    900: 'Highlight text on tinted bg',
   },
   accent: {
     100: 'Alert background',
     200: 'Hover tint',
-    300: 'Border / outline accent',
+    300: 'Border / outline',
     400: 'Secondary indicator',
-    500: 'Icon, badge background',
+    500: 'Icon, badge background ← BASE',
     600: 'Darker badge/chip',
-    700: 'Alert text on light bg',
-    800: 'Strong text, contrast on light',
-    900: 'Darkest, for text on tinted bg',
-  }
+    700: 'Text on light bg',
+    800: 'Strong text, high contrast',
+    900: 'Text on tinted bg',
+  },
 };
 
 function renderEditor() {
@@ -1198,54 +1294,56 @@ function renderEditor() {
   empty.style.display = 'none';
   editor.style.display = 'flex';
 
-  document.getElementById('editorGroupName').textContent = `${g.name} — ${g.type.charAt(0).toUpperCase()+g.type.slice(1)}`;
-  document.getElementById('editorGroupDesc').textContent = typeDescriptions[g.type];
+  const desc = typeDescriptions[g.type] || typeDescriptions.accent;
+  document.getElementById('editorGroupName').textContent = `${g.name}`;
+  document.getElementById('editorGroupDesc').textContent = desc;
 
   const [bh,bs,bl] = hexToHsl(g.baseHex);
-  const hints = typeHints[g.type];
+  const hints = typeHints[g.type] || typeHints.accent;
 
   let tweakHtml = '';
   if(selectedShadeIdx !== null) {
     const sh = g.shades[selectedShadeIdx];
     const [h,s,l] = hexToHsl(sh.hex);
+
+    // Compute constrained range: ±12% from neighbors (or absolute edge)
+    const prevL = selectedShadeIdx > 0 ? hexToHsl(g.shades[selectedShadeIdx-1].hex)[2] : 98;
+    const nextL = selectedShadeIdx < 8 ? hexToHsl(g.shades[selectedShadeIdx+1].hex)[2] : 2;
+    // shades go light→dark (100 is lightest = highest L)
+    const minL = Math.max(nextL + 2, 2);
+    const maxL = Math.min(prevL - 2, 98);
+    const clampedL = Math.max(minL, Math.min(maxL, l));
+
     tweakHtml = `
     <div class="tweak-panel">
-      <div class="tweak-title">Fine-tune shade ${sh.name}</div>
+      <div class="tweak-title">
+        Fine-tune ${sh.name}
+        <span style="font-size:10px;color:var(--text-faint);font-weight:400;margin-left:4px;">— lightness only, range constrained between neighbors</span>
+      </div>
       <div class="sliders">
         <div class="slider-row">
-          <span class="slider-label">Hue</span>
-          <input type="range" min="0" max="360" value="${h}" oninput="tweakShade(${selectedShadeIdx},'h',this.value)" id="slH">
-          <span class="slider-value" id="slHv">${h}°</span>
-        </div>
-        <div class="slider-row">
-          <span class="slider-label">Saturation</span>
-          <input type="range" min="0" max="100" value="${s}" oninput="tweakShade(${selectedShadeIdx},'s',this.value)" id="slS">
-          <span class="slider-value" id="slSv">${s}%</span>
-        </div>
-        <div class="slider-row">
           <span class="slider-label">Lightness</span>
-          <input type="range" min="2" max="98" value="${l}" oninput="tweakShade(${selectedShadeIdx},'l',this.value)" id="slL">
-          <span class="slider-value" id="slLv">${l}%</span>
+          <input type="range" min="${minL}" max="${maxL}" value="${clampedL}" oninput="tweakShade(${selectedShadeIdx},this.value)" id="slL">
+          <span class="slider-value" id="slLv">${clampedL}%</span>
         </div>
       </div>
-      <div class="info-row" style="margin-top:10px;">
-        <span>Used for: <strong>${hints[sh.name]||''}</strong></span>
-        <span style="font-family:'DM Mono',monospace;">${sh.hex}</span>
+      <div style="margin-top:10px;display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:11px;color:var(--text-muted);">Use for: <strong>${hints[sh.name]||''}</strong></span>
+        <span style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text-faint);">${sh.hex}</span>
       </div>
     </div>`;
   }
 
-  // Contrast info row
   const lum = getLuminance(g.baseHex);
   const textContrast = lum > 55 ? 'Dark text recommended on 500' : 'Light text recommended on 500';
 
   const body = document.getElementById('editorBody');
   body.innerHTML = `
     <div class="section-intro">
-      <div class="section-intro-icon">${g.type==='grey'?'🔘':g.type==='primary'?'💎':'🎯'}</div>
+      <div class="section-intro-icon">${g.type==='grey'?'🔘':g.type==='primary'?'💎':g.type==='error'?'⛔':g.type==='warning'?'⚠️':g.type==='success'?'✅':g.type==='highlight'?'✨':'🎯'}</div>
       <div>
-        <div style="font-weight:600;color:var(--text);margin-bottom:4px;">${g.name} Color Scale (100–900)</div>
-        <div>בחר את <strong>הצבע הבסיסי</strong> (500), ואז לחץ <strong>⚡ Auto-Generate</strong> כדי ליצור את 9 הגוונים. אחרי זה תוכל לכוונן כל גוון בנפרד ע"י לחיצה עליו.</div>
+        <div style="font-weight:600;color:var(--text);margin-bottom:4px;">${g.name} — ${g.type.charAt(0).toUpperCase()+g.type.slice(1)} Color Scale (100–900)</div>
+        <div>${desc}</div>
       </div>
     </div>
 
@@ -1275,7 +1373,7 @@ function renderEditor() {
           return `
           <div class="shade-item">
             <div class="shade-swatch ${isSelected?'selected':''}" style="background:${sh.hex};" onclick="selectShade(${i})" title="${sh.name}: ${sh.hex}">
-              ${isSelected?`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:${textCol};font-weight:600;">✓</div>`:''}
+              ${isSelected?`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:${textCol};font-weight:700;">✓</div>`:''}
             </div>
             <div class="shade-label">${sh.name}</div>
             <div class="shade-hex">${sh.hex}</div>
@@ -1346,14 +1444,14 @@ function renderPreviewCard(g) {
         </div>
       </div>`;
   } else {
-    // Determine semantic role for icon choice
-    const lower = g.name.toLowerCase();
-    const isError   = /(error|danger|red)/.test(lower);
-    const isSuccess = /(success|green)/.test(lower);
-    const isWarn    = /(warn|yellow|orange)/.test(lower);
+    // Determine role from semantic type
+    const isError     = g.type === 'error';
+    const isSuccess   = g.type === 'success';
+    const isWarn      = g.type === 'warning';
+    const isHighlight = g.type === 'highlight';
 
-    const roleIcon  = isError ? iconClose : isSuccess ? iconCheck : isWarn ? iconAlert : iconInfo;
-    const roleLabel = isError ? 'Error message' : isSuccess ? 'Success message' : isWarn ? 'Warning' : 'Info alert';
+    const roleIcon  = isError ? iconClose : isSuccess ? iconCheck : isWarn ? iconAlert : isHighlight ? `<svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="display:inline-block;vertical-align:middle;margin-right:5px;"><path d="M6 1l1.5 3h3.2l-2.6 1.9 1 3L6 7.4l-3.1 1.5 1-3L1.3 4h3.2z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>` : iconInfo;
+    const roleLabel = isError ? 'Error — action failed' : isSuccess ? 'Success — action completed' : isWarn ? 'Warning — proceed with care' : isHighlight ? 'New feature available!' : `${g.name} alert`;
 
     return `
       <!-- Alert banner -->
@@ -1407,16 +1505,12 @@ function selectShade(idx) {
   renderEditor();
 }
 
-function tweakShade(idx, prop, val) {
+function tweakShade(idx, val) {
   const g = getActiveGroup();
   if(!g) return;
   val = parseInt(val);
   const [h,s,l] = hexToHsl(g.shades[idx].hex);
-  let nh=h,ns=s,nl=l;
-  if(prop==='h') nh=val;
-  else if(prop==='s') ns=val;
-  else nl=val;
-  g.shades[idx].hex = hslToHex(nh,ns,nl);
+  g.shades[idx].hex = hslToHex(h, s, val);
 
   // update display without full re-render
   const strip = document.getElementById('shadeStrip');
@@ -1426,21 +1520,61 @@ function tweakShade(idx, prop, val) {
     const hexes = strip.querySelectorAll('.shade-hex');
     if(hexes[idx]) hexes[idx].textContent = g.shades[idx].hex;
   }
-  // update value displays
-  const vMap = {h:'slHv',s:'slSv',l:'slLv'};
-  const suffMap = {h:'°',s:'%',l:'%'};
-  const vEl = document.getElementById(vMap[prop]);
-  if(vEl) vEl.textContent = val + suffMap[prop];
+  const vEl = document.getElementById('slLv');
+  if(vEl) vEl.textContent = val + '%';
 
   renderSidebar();
   renderExport();
 }
 
+// ==================== COLOR POPOVER ====================
+
+function toggleColorPopover(e) {
+  e.stopPropagation();
+  const pop = document.getElementById('colorPopover');
+  if(!pop) return;
+  pop.classList.toggle('open');
+}
+
+function onColorPickerInput(val) {
+  const hexInput = document.getElementById('colorHexInput');
+  if(hexInput) hexInput.value = val;
+  updateBase(val);
+}
+
+function onHexInput(val) {
+  val = val.trim();
+  if(!val.startsWith('#')) val = '#'+val;
+  if(/^#[0-9a-fA-F]{6}$/.test(val)) {
+    const picker = document.getElementById('colorPickerInput');
+    if(picker) picker.value = val;
+    updateBase(val);
+  }
+}
+
+// Close popover on outside click
+document.addEventListener('click', function(e) {
+  const wrap = document.getElementById('colorPickerWrap');
+  if(wrap && !wrap.contains(e.target)) {
+    const pop = document.getElementById('colorPopover');
+    if(pop) pop.classList.remove('open');
+  }
+});
+
 function updateBase(hex) {
   const g = getActiveGroup();
   if(!g) return;
   g.baseHex = hex;
-  renderEditor();
+  // update inline without full re-render
+  const swatch = document.getElementById('colorSwatch');
+  if(swatch) swatch.style.background = hex;
+  const prevSwatch = document.getElementById('basePreviewSwatch');
+  if(prevSwatch) prevSwatch.style.background = hex;
+  const [bh,bs,bl] = hexToHsl(hex);
+  const hexD = document.getElementById('baseHexDisplay');
+  if(hexD) hexD.textContent = hex;
+  const hslD = document.getElementById('baseHslDisplay');
+  if(hslD) hslD.textContent = `hsl(${bh}, ${bs}%, ${bl}%)`;
   renderSidebar();
   renderExport();
 }
@@ -1448,10 +1582,8 @@ function updateBase(hex) {
 function autoGenerate() {
   const g = getActiveGroup();
   if(!g) return;
-  const btn = document.getElementById('autoGenBtn');
-  btn.classList.add('spinning');
-  setTimeout(() => btn.classList.remove('spinning'), 600);
-  g.shades = generateShades(g.baseHex, g.type);
+  const genType = g.type === 'grey' ? 'grey' : 'primary';
+  g.shades = generateShades(g.baseHex, genType);
   selectedShadeIdx = null;
   renderEditor();
   renderSidebar();
@@ -1520,26 +1652,19 @@ function generateMUI() {
 
   out += `const theme = createTheme({\n  palette: {\n`;
 
-  // Map types to MUI palette slots
-  const greyGroup = groups.find(g=>g.type==='grey');
+  // Map types to MUI palette slots using g.type directly
+  const greyGroup    = groups.find(g=>g.type==='grey');
   const primaryGroup = groups.find(g=>g.type==='primary');
-  const accentGroups = groups.filter(g=>g.type==='accent');
+  const errGroup     = groups.find(g=>g.type==='error');
+  const warnGroup    = groups.find(g=>g.type==='warning');
+  const succGroup    = groups.find(g=>g.type==='success');
+  const hlGroup      = groups.find(g=>g.type==='highlight');
 
-  if(primaryGroup) {
-    const n = primaryGroup.name.replace(/\s+/g,'');
-    out += `    primary: ${n}Colors,\n`;
-  }
-  if(accentGroups.length>0) {
-    const n = accentGroups[0].name.replace(/\s+/g,'');
-    out += `    secondary: ${n}Colors,\n`;
-  }
-  // Semantic colors: try to find by name
-  const errGroup = groups.find(g=>/(red|error|danger)/i.test(g.name));
-  const warnGroup = groups.find(g=>/(yellow|warn|orange)/i.test(g.name));
-  const succGroup = groups.find(g=>/(green|success)/i.test(g.name));
-  if(errGroup) out += `    error: ${errGroup.name.replace(/\s+/g,'')}Colors,\n`;
-  if(warnGroup) out += `    warning: ${warnGroup.name.replace(/\s+/g,'')}Colors,\n`;
-  if(succGroup) out += `    success: ${succGroup.name.replace(/\s+/g,'')}Colors,\n`;
+  if(primaryGroup) out += `    primary: ${primaryGroup.name.replace(/\s+/g,'')}Colors,\n`;
+  if(hlGroup)      out += `    secondary: ${hlGroup.name.replace(/\s+/g,'')}Colors,\n`;
+  if(errGroup)     out += `    error: ${errGroup.name.replace(/\s+/g,'')}Colors,\n`;
+  if(warnGroup)    out += `    warning: ${warnGroup.name.replace(/\s+/g,'')}Colors,\n`;
+  if(succGroup)    out += `    success: ${succGroup.name.replace(/\s+/g,'')}Colors,\n`;
 
   if(greyGroup) {
     out += `    grey: {\n`;
@@ -1631,9 +1756,12 @@ function selectType(type, el) {
 
   // suggest default name and color
   const defaults = {
-    grey: { name: 'Neutral', color: '#718096' },
-    primary: { name: 'Primary', color: '#2563eb' },
-    accent: { name: 'Error / Success / Warning…', color: '#dc2626' }
+    grey:      { name: 'Neutral',   color: '#718096' },
+    primary:   { name: 'Primary',   color: '#2563eb' },
+    error:     { name: 'Error',     color: '#dc2626' },
+    warning:   { name: 'Warning',   color: '#d97706' },
+    success:   { name: 'Success',   color: '#16a34a' },
+    highlight: { name: 'Highlight', color: '#7c3aed' },
   };
   const d = defaults[type];
   if(!document.getElementById('modalName').value) {
@@ -1675,11 +1803,9 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// ==================== INIT ====================
+// ==================== INIT — start with full recommended setup ====================
 
-renderSidebar();
-renderEditor();
-renderExport();
+addDefaultGroups();
 </script>
 </body>
 </html>
