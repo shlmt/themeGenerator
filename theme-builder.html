@@ -844,7 +844,237 @@
     padding: 0;
   }
 
-  /* Palette overview bar */
+  /* ===== MANUAL WIZARD ===== */
+  .wizard-mode-toggle {
+    display: flex;
+    gap: 2px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px;
+  }
+  .wizard-mode-btn {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    transition: all 0.12s;
+    font-family: inherit;
+  }
+  .wizard-mode-btn.active {
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+
+  /* Step progress bar */
+  .wizard-steps {
+    display: flex;
+    gap: 0;
+    margin-bottom: 18px;
+    position: relative;
+  }
+  .wizard-steps::before {
+    content: '';
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    right: 14px;
+    height: 2px;
+    background: var(--border);
+    z-index: 0;
+  }
+  .wizard-step-dot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    position: relative;
+    z-index: 1;
+  }
+  .wizard-step-circle {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    color: var(--text-faint);
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  .wizard-step-circle.done {
+    background: var(--text);
+    border-color: var(--text);
+    color: white;
+  }
+  .wizard-step-circle.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+  }
+  .wizard-step-label {
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--text-faint);
+    text-align: center;
+    line-height: 1.2;
+  }
+  .wizard-step-dot.active .wizard-step-label { color: var(--accent); }
+  .wizard-step-dot.done .wizard-step-label { color: var(--text-muted); }
+
+  /* Wizard content panel */
+  .wizard-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .wizard-instruction {
+    background: var(--accent-light);
+    border: 1px solid rgba(37,99,235,0.15);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 12px;
+    color: #1e40af;
+    line-height: 1.6;
+  }
+  .wizard-instruction strong { font-weight: 700; }
+  .wizard-instruction .step-num {
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 3px;
+    opacity: 0.7;
+  }
+
+  /* Color pickers row in wizard */
+  .wizard-pickers {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .wizard-picker-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
+  }
+  .wizard-picker-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+  }
+  .wizard-swatch-btn {
+    width: 52px;
+    height: 52px;
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--border);
+    cursor: pointer;
+    position: relative;
+    overflow: visible;
+    transition: transform 0.1s, border-color 0.15s;
+  }
+  .wizard-swatch-btn:hover { transform: scale(1.06); border-color: var(--border-strong); }
+  .wizard-swatch-btn.shade-active { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }
+  .wizard-swatch-btn input[type="color"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    border: none;
+    padding: 0;
+  }
+  .wizard-swatch-hex {
+    font-size: 9px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text-faint);
+    text-align: center;
+  }
+
+  /* Wizard context preview */
+  .wizard-context-preview {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+  .wizard-context-label {
+    background: var(--bg);
+    padding: 6px 12px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-faint);
+    border-bottom: 1px solid var(--border);
+  }
+  .wizard-context-body { padding: 12px; }
+
+  /* Shade strip in wizard — with states */
+  .wizard-shade-strip {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 4px;
+  }
+  .wizard-shade-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+  .wizard-shade-swatch {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 4px;
+    border: 2px solid transparent;
+    position: relative;
+    transition: transform 0.1s;
+  }
+  .wizard-shade-swatch.set { border-color: rgba(0,0,0,0.12); }
+  .wizard-shade-swatch.current {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(37,99,235,0.2);
+    transform: scaleY(1.12) translateY(-2px);
+  }
+  .wizard-shade-swatch.interpolated { opacity: 0.45; border-style: dashed; border-color: var(--border-strong); }
+  .wizard-shade-swatch.empty { background: var(--bg) !important; border: 2px dashed var(--border); }
+  .wizard-shade-num {
+    font-size: 9px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text-faint);
+    text-align: center;
+  }
+
+  /* Wizard nav buttons */
+  .wizard-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 4px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+  .wizard-nav-info {
+    font-size: 11px;
+    color: var(--text-faint);
+  }
+
   .palette-overview {
     display: flex;
     height: 28px;
@@ -897,11 +1127,10 @@
   <!-- MAIN EDITOR -->
   <main class="editor">
     <div id="editorContent" style="display:flex;flex-direction:column;height:100%;overflow:hidden;">
-      <div class="empty-state" id="emptyState">
+      <div class="empty-state" id="emptyState" style="display:none;">
         <div class="empty-icon">🎨</div>
-        <div class="empty-title">Start Building Your Palette</div>
-        <div class="empty-desc">לחץ על "Add Color Group" כדי להוסיף את הצבע הראשון. מומלץ להתחיל עם Greys.</div>
-        <button class="btn btn-primary" style="margin-top:8px;" onclick="addDefaultGroups()">✨ Start with recommended setup</button>
+        <div class="empty-title">No color groups</div>
+        <div class="empty-desc">לחץ על "+ Add Color Group" בצד שמאל כדי להוסיף קבוצת צבעים.</div>
       </div>
       <div id="shadeEditor" style="display:none;flex-direction:column;height:100%;overflow:hidden;">
         <div class="editor-header">
@@ -1100,10 +1329,9 @@ function uid() { return Math.random().toString(36).slice(2,8); }
 
 function addGroup(name, type, baseHex) {
   const id = uid();
-  // normalize to generation category
   const genType = type === 'grey' ? 'grey' : 'primary';
   const shades = generateShades(baseHex, genType);
-  groups.push({ id, name, type, baseHex, shades });
+  groups.push({ id, name, type, baseHex, shades, manualMode: false, wizardStep: 1 });
   renderSidebar();
   setActiveGroup(id);
   renderExport();
@@ -1363,25 +1591,17 @@ function renderEditor() {
     </div>
 
     <div class="card">
-      <div class="card-title">9 Shades — click to fine-tune</div>
-      <div class="shade-strip" id="shadeStrip">
-        ${g.shades.map((sh,i) => {
-          const lum2 = getLuminance(sh.hex);
-          const textCol = lum2 > 55 ? '#1a1a18' : '#ffffff';
-          const isSelected = selectedShadeIdx === i;
-          const usage = hints[sh.name] || '';
-          return `
-          <div class="shade-item">
-            <div class="shade-swatch ${isSelected?'selected':''}" style="background:${sh.hex};" onclick="selectShade(${i})" title="${sh.name}: ${sh.hex}">
-              ${isSelected?`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:${textCol};font-weight:700;">✓</div>`:''}
-            </div>
-            <div class="shade-label">${sh.name}</div>
-            <div class="shade-hex">${sh.hex}</div>
-            <div style="font-size:9px;color:var(--text-faint);text-align:center;line-height:1.3;margin-top:3px;word-break:break-word;">${usage}</div>
-          </div>`;
-        }).join('')}
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div class="card-title" style="margin-bottom:0;">9 Shades</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          ${g.manualMode ? '' : `<button class="btn btn-secondary btn-sm" onclick="autoGenerate()" id="autoGenBtn">⚡ Auto-Generate Shades</button>`}
+          <div class="wizard-mode-toggle">
+            <button class="wizard-mode-btn ${!g.manualMode?'active':''}" onclick="setMode(false)">⚡ Auto</button>
+            <button class="wizard-mode-btn ${g.manualMode?'active':''}" onclick="setMode(true)">✏️ Manual Build</button>
+          </div>
+        </div>
       </div>
-      ${tweakHtml}
+      ${g.manualMode ? renderWizard(g, hints) : renderAutoStrip(g, hints, tweakHtml)}
     </div>
 
     <div class="card">
@@ -1391,6 +1611,417 @@ function renderEditor() {
       </div>
     </div>
   `;
+}
+
+// ==================== AUTO STRIP ====================
+
+function renderAutoStrip(g, hints, tweakHtml) {
+  return `
+    <div class="shade-strip" id="shadeStrip">
+      ${g.shades.map((sh,i) => {
+        const lum2 = getLuminance(sh.hex);
+        const textCol = lum2 > 55 ? '#1a1a18' : '#ffffff';
+        const isSelected = selectedShadeIdx === i;
+        const usage = hints[sh.name] || '';
+        return `
+        <div class="shade-item">
+          <div class="shade-swatch ${isSelected?'selected':''}" style="background:${sh.hex};" onclick="selectShade(${i})" title="${sh.name}: ${sh.hex}">
+            ${isSelected?`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:${textCol};font-weight:700;">✓</div>`:''}
+          </div>
+          <div class="shade-label">${sh.name}</div>
+          <div class="shade-hex">${sh.hex}</div>
+          <div style="font-size:9px;color:var(--text-faint);text-align:center;line-height:1.3;margin-top:3px;word-break:break-word;">${usage}</div>
+        </div>`;
+      }).join('')}
+    </div>
+    ${tweakHtml}`;
+}
+
+// ==================== MANUAL WIZARD ====================
+// Shade indices: 0=100, 1=200, ..., 4=500, ..., 8=900
+// Step 1: Set base (500) → index 4
+// Step 2: Set edges — 100 (index 0) and 900 (index 8)
+// Step 3: Set midpoints — 300 (index 2) and 700 (index 6)
+// Step 4: Fill remaining — 200 (1), 400 (3), 600 (5), 800 (7)
+
+const WIZARD_STEPS = [
+  {
+    id: 1,
+    title: 'Choose the Base Color',
+    subtitle: 'Step 1 of 4',
+    shadeIndices: [4], // 500
+    instruction: `<div class="step-num">Step 1 — Base Color</div>Pick a color that would work well as a <strong>button background</strong>. This becomes shade 500 — the anchor of the whole scale. There's no right lightness rule here: trust your eye.`,
+    previewType: 'button',
+  },
+  {
+    id: 2,
+    title: 'Find the Edges',
+    subtitle: 'Step 2 of 4',
+    shadeIndices: [0, 8], // 100 and 900
+    instruction: `<div class="step-num">Step 2 — Edges (100 & 900)</div>Pick your <strong>lightest shade (100)</strong> — used as an alert / tinted background. Then pick your <strong>darkest shade (900)</strong> — used for text. An alert component is the perfect test: it uses both at once.`,
+    previewType: 'alert',
+  },
+  {
+    id: 3,
+    title: 'Fill the Midpoints',
+    subtitle: 'Step 3 of 4',
+    shadeIndices: [2, 6], // 300 and 700
+    instruction: `<div class="step-num">Step 3 — Midpoints (300 & 700)</div>Pick shades <strong>300 and 700</strong> — they sit right in the middle of each gap. They should feel like a natural compromise between their neighbors on either side.`,
+    previewType: 'range',
+  },
+  {
+    id: 4,
+    title: 'Fill the Gaps',
+    subtitle: 'Step 4 of 4',
+    shadeIndices: [1, 3, 5, 7], // 200, 400, 600, 800
+    instruction: `<div class="step-num">Step 4 — Fill the Gaps (200, 400, 600, 800)</div>Finally, fill in the four remaining holes. Each should feel like a natural step between its neighbors. The interpolated suggestions are a good starting point — trust your eyes for the final call.`,
+    previewType: 'full',
+  },
+];
+
+// Names for each index
+const SHADE_NAMES = [100,200,300,400,500,600,700,800,900];
+
+// Interpolate a single missing shade between prev and next
+function interpolateShade(prevHex, nextHex, ratio) {
+  // interpolate in HSL space
+  const [h1,s1,l1] = hexToHsl(prevHex);
+  const [h2,s2,l2] = hexToHsl(nextHex);
+  // Handle hue wrap
+  let dh = h2 - h1;
+  if(dh > 180) dh -= 360;
+  if(dh < -180) dh += 360;
+  return hslToHex(
+    (h1 + dh * ratio + 360) % 360,
+    s1 + (s2-s1) * ratio,
+    l1 + (l2-l1) * ratio
+  );
+}
+
+// Given set shades (sparse array, nulls for unset), fill in all gaps
+function fillInterpolated(shades) {
+  const filled = [...shades];
+  const setIdxs = shades.map((s,i) => s ? i : null).filter(i => i !== null);
+  if(setIdxs.length === 0) return filled;
+
+  // Extrapolate before first anchor
+  if(setIdxs[0] > 0) {
+    const [h,s,l] = hexToHsl(shades[setIdxs[0]]);
+    for(let i = 0; i < setIdxs[0]; i++) {
+      const steps = setIdxs[0] - i;
+      filled[i] = hslToHex(h, Math.max(0, s - steps*3), Math.min(97, l + steps*7));
+    }
+  }
+  // Extrapolate after last anchor
+  if(setIdxs[setIdxs.length-1] < 8) {
+    const last = setIdxs[setIdxs.length-1];
+    const [h,s,l] = hexToHsl(shades[last]);
+    for(let i = last+1; i <= 8; i++) {
+      const steps = i - last;
+      filled[i] = hslToHex(h, Math.min(100, s + steps*2), Math.max(5, l - steps*7));
+    }
+  }
+  // Interpolate between set anchors
+  for(let k = 0; k < setIdxs.length - 1; k++) {
+    const a = setIdxs[k], b = setIdxs[k+1];
+    for(let i = a+1; i < b; i++) {
+      const ratio = (i - a) / (b - a);
+      filled[i] = interpolateShade(shades[a], shades[b], ratio);
+    }
+  }
+  return filled;
+}
+
+// Which shades are "set" (not interpolated) at this step
+function getSetMask(step, g) {
+  // step 1 sets index 4 (500)
+  // step 2 sets 0 (100) and 8 (900)
+  // step 3 sets 2 (300) and 6 (700)
+  // step 4 sets 1,3,5,7
+  const setByStep = {1:[4], 2:[0,8], 3:[2,6], 4:[1,3,5,7]};
+  const set = new Set();
+  for(let s=1; s <= step; s++) {
+    (setByStep[s]||[]).forEach(i => set.add(i));
+  }
+  return set;
+}
+
+function renderWizard(g, hints) {
+  const step = g.wizardStep || 1;
+  const stepDef = WIZARD_STEPS[step-1];
+  const setMask = getSetMask(step, g);
+
+  // wizardSet tracks which indices were explicitly set by the user in the wizard
+  if(!g.wizardSet) g.wizardSet = new Set([4]); // 500 is pre-set from baseHex
+
+  // Build sparse array: only wizardSet indices have values
+  const sparseShades = g.shades.map((sh, i) => g.wizardSet.has(i) ? sh.hex : null);
+  const displayShades = fillInterpolated(sparseShades);
+
+  const STEP_LABELS = ['Base','Edges','Midpoints','Gaps'];
+  // Step progress dots
+  const stepDots = WIZARD_STEPS.map((s,i) => {
+    const isDone = step > s.id;
+    const isActive = step === s.id;
+    return `
+    <div class="wizard-step-dot ${isDone?'done':''} ${isActive?'active':''}" onclick="goToWizardStep(${s.id})">
+      <div class="wizard-step-circle ${isDone?'done':''} ${isActive?'active':''}">
+        ${isDone ? '✓' : s.id}
+      </div>
+      <div class="wizard-step-label">${STEP_LABELS[i]}</div>
+    </div>`;
+  }).join('');
+
+  // Color pickers for current step
+  const pickerGroups = stepDef.shadeIndices.map(idx => {
+    const name = SHADE_NAMES[idx];
+    const hex = g.shades[idx]?.hex || g.baseHex;
+    const lum = getLuminance(hex);
+    const textCol = lum > 55 ? '#1a1a18' : '#ffffff';
+    return `
+    <div class="wizard-picker-group">
+      <div class="wizard-picker-label">${name}</div>
+      <div class="wizard-swatch-btn shade-active" style="background:${hex};" title="Click to pick shade ${name}">
+        <input type="color" value="${hex}" oninput="wizardPickShade(${idx}, this.value)" onchange="wizardPickShade(${idx}, this.value)">
+        <div style="position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;pointer-events:none;">
+          <span style="font-size:9px;font-weight:700;color:${textCol};opacity:0.8;">${name}</span>
+        </div>
+      </div>
+      <div class="wizard-swatch-hex">${hex}</div>
+      <div style="font-size:9px;color:var(--text-faint);text-align:center;max-width:56px;line-height:1.3;">${(hints[name]||'').split(',')[0]}</div>
+    </div>`;
+  }).join('');
+
+  // Full shade strip showing set vs interpolated vs empty
+  const stripCells = g.shades.map((sh, i) => {
+    const name = SHADE_NAMES[i];
+    const isCurrentStep = stepDef.shadeIndices.includes(i);
+    const isSetBefore = setMask.has(i) && !isCurrentStep;
+    const dispHex = displayShades[i] || '#e8e8e4';
+    const lum = getLuminance(dispHex);
+    const textCol = lum > 55 ? '#1a1a18' : '#ffffff';
+    let swatchClass = isCurrentStep ? 'current' : isSetBefore ? 'set' : 'interpolated';
+    return `
+    <div class="wizard-shade-cell">
+      <div class="wizard-shade-swatch ${swatchClass}" style="background:${dispHex};">
+        ${isSetBefore ? `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:${textCol};font-weight:800;">✓</div>` : ''}
+        ${isCurrentStep ? `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:${textCol};font-weight:800;">●</div>` : ''}
+      </div>
+      <div class="wizard-shade-num">${name}</div>
+    </div>`;
+  }).join('');
+
+  // Context preview per step
+  const contextPreview = renderWizardPreview(step, g, displayShades);
+
+  // Nav buttons
+  const canGoBack = step > 1;
+  const isLast = step === 4;
+  const canFinish = step === 4;
+
+  return `
+  <div class="wizard-panel">
+    <div class="wizard-steps">${stepDots}</div>
+
+    <div class="wizard-instruction">${stepDef.instruction}</div>
+
+    <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;">
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:8px;">Pick shade${stepDef.shadeIndices.length>1?'s':''}</div>
+        <div class="wizard-pickers">${pickerGroups}</div>
+      </div>
+      <div style="flex:1;min-width:180px;">
+        ${contextPreview}
+      </div>
+    </div>
+
+    <div>
+      <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:6px;">Scale overview</div>
+      <div style="font-size:9px;color:var(--text-faint);margin-bottom:6px;">● = current step &nbsp; ✓ = already set &nbsp; faded = suggested interpolation</div>
+      <div class="wizard-shade-strip">${stripCells}</div>
+    </div>
+
+    <div class="wizard-nav">
+      <button class="btn btn-secondary btn-sm" onclick="goToWizardStep(${step-1})" ${!canGoBack?'disabled style="opacity:0.4;cursor:not-allowed;"':''}>← Back</button>
+      <span class="wizard-nav-info">Step ${step} of 4</span>
+      ${isLast
+        ? `<button class="btn btn-primary btn-sm" onclick="wizardFinish()">✓ Apply & Done</button>`
+        : `<button class="btn btn-primary btn-sm" onclick="goToWizardStep(${step+1})">Next →</button>`
+      }
+    </div>
+  </div>`;
+}
+
+function renderWizardPreview(step, g, displayShades) {
+  const hex = (i) => displayShades[i] || '#e8e8e4';
+  const isGrey = g.type === 'grey';
+
+  if(step === 1) {
+    // Button preview
+    const base = hex(4);
+    const lum = getLuminance(base);
+    const textCol = lum > 55 ? '#1a1a18' : '#ffffff';
+    return `
+    <div class="wizard-context-preview">
+      <div class="wizard-context-label">Will it work as a button?</div>
+      <div class="wizard-context-body" style="display:flex;flex-direction:column;gap:8px;">
+        <div style="background:${base};border-radius:6px;padding:9px 16px;display:inline-flex;align-items:center;gap:7px;cursor:pointer;width:fit-content;">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 2v9M2 6.5h9" stroke="${textCol}" stroke-width="2" stroke-linecap="round"/></svg>
+          <span style="color:${textCol};font-size:13px;font-weight:600;">Create project</span>
+        </div>
+        <div style="border:1.5px solid ${base};border-radius:6px;padding:9px 16px;display:inline-flex;align-items:center;gap:7px;cursor:pointer;width:fit-content;">
+          <span style="color:${base};font-size:13px;font-weight:600;">View details</span>
+        </div>
+        <div style="font-size:10px;color:var(--text-faint);">Solid fill & outline variant</div>
+      </div>
+    </div>`;
+  }
+
+  if(step === 2) {
+    // Alert preview — light bg (100) + dark text (900) + base accent (500)
+    const light = hex(0), dark = hex(8), base = hex(4);
+    const darkLum = getLuminance(dark);
+    const darkText = darkLum > 55 ? '#1a1a18' : '#ffffff';
+    const icon = isGrey
+      ? `<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="${dark}" stroke-width="1.5"/><path d="M6.5 4.5v3M6.5 9.2v.1" stroke="${dark}" stroke-width="1.5" stroke-linecap="round"/></svg>`
+      : `<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1L1 11h11L6.5 1z" stroke="${dark}" stroke-width="1.4" stroke-linejoin="round"/><path d="M6.5 5v3M6.5 9.5v.2" stroke="${dark}" stroke-width="1.4" stroke-linecap="round"/></svg>`;
+    return `
+    <div class="wizard-context-preview">
+      <div class="wizard-context-label">Alert — uses 100 bg + 900 text</div>
+      <div class="wizard-context-body" style="display:flex;flex-direction:column;gap:8px;">
+        <div style="background:${light};border:1px solid ${hex(2)};border-left:3px solid ${base};border-radius:6px;padding:10px 12px;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+            ${icon}
+            <span style="font-size:12px;font-weight:700;color:${dark};">Alert heading</span>
+          </div>
+          <div style="font-size:11px;color:${dark};opacity:0.75;margin-left:19px;">Description text using your 900 shade. Background is 100.</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <div style="font-size:10px;color:var(--text-faint);display:flex;align-items:center;gap:4px;">
+            <span style="width:12px;height:12px;border-radius:3px;background:${light};border:1px solid var(--border);display:inline-block;"></span>100 background
+          </div>
+          <div style="font-size:10px;color:var(--text-faint);display:flex;align-items:center;gap:4px;">
+            <span style="width:12px;height:12px;border-radius:3px;background:${dark};display:inline-block;"></span>900 text
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  if(step === 3) {
+    // Show 300 between 100 and 500, and 700 between 500 and 900
+    const c = [0,2,4,6,8].map(i => hex(i));
+    return `
+    <div class="wizard-context-preview">
+      <div class="wizard-context-label">Do 300 and 700 feel balanced?</div>
+      <div class="wizard-context-body">
+        <div style="display:flex;gap:6px;margin-bottom:8px;">
+          ${[0,2,4,6,8].map((idx,k) => {
+            const h = hex(idx);
+            const lum = getLuminance(h);
+            const tc = lum > 55 ? '#1a1a18':'#ffffff';
+            const isCurrent = idx === 2 || idx === 6;
+            return `<div style="flex:1;height:36px;border-radius:4px;background:${h};border:${isCurrent?'2px solid var(--accent)':'1px solid rgba(0,0,0,0.06)'};display:flex;align-items:center;justify-content:center;">
+              <span style="font-size:9px;font-weight:700;color:${tc};">${SHADE_NAMES[idx]}</span>
+            </div>`;
+          }).join('')}
+        </div>
+        <div style="font-size:10px;color:var(--text-faint);">Highlighted = midpoints you're setting now. Each should feel like a natural step between neighbors.</div>
+      </div>
+    </div>`;
+  }
+
+  // Step 4 — full scale
+  return `
+  <div class="wizard-context-preview">
+    <div class="wizard-context-label">Complete scale</div>
+    <div class="wizard-context-body">
+      <div style="display:flex;gap:3px;margin-bottom:8px;">
+        ${g.shades.map((sh,i) => {
+          const h = displayShades[i] || '#e8e8e4';
+          const lum = getLuminance(h);
+          const tc = lum > 55 ? '#1a1a18':'#ffffff';
+          const isCurrent = [1,3,5,7].includes(i);
+          return `<div style="flex:1;height:28px;border-radius:3px;background:${h};border:${isCurrent?'2px solid var(--accent)':'1px solid rgba(0,0,0,0.04)'};display:flex;align-items:center;justify-content:center;">
+            <span style="font-size:8px;font-weight:700;color:${tc};">${SHADE_NAMES[i]}</span>
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="font-size:10px;color:var(--text-faint);">Highlighted = the last 4 gaps you're filling now. Adjust until the full scale feels balanced.</div>
+    </div>
+  </div>`;
+}
+
+// ==================== WIZARD ACTIONS ====================
+
+function setMode(manual) {
+  const g = getActiveGroup();
+  if(!g) return;
+  g.manualMode = manual;
+  if(manual) {
+    g.wizardStep = 1;
+    // Only 500 (index 4) is pre-set from the base color
+    g.wizardSet = new Set([4]);
+    // Ensure shade 500 = baseHex
+    g.shades[4] = { name: 500, hex: g.baseHex };
+  }
+  selectedShadeIdx = null;
+  renderEditor();
+}
+
+function goToWizardStep(step) {
+  if(step < 1 || step > 4) return;
+  const g = getActiveGroup();
+  if(!g) return;
+
+  // Before going forward, lock in current step's interpolations
+  if(step > (g.wizardStep||1)) {
+    applyInterpolations(g, g.wizardStep||1);
+  }
+
+  g.wizardStep = step;
+  renderEditor();
+  renderSidebar();
+  renderExport();
+}
+
+function applyInterpolations(g, currentStep) {
+  if(!g.wizardSet) g.wizardSet = new Set([4]);
+  const sparseShades = g.shades.map((sh, i) => g.wizardSet.has(i) ? sh.hex : null);
+  const filled = fillInterpolated(sparseShades);
+  g.shades.forEach((sh, i) => {
+    if(!g.wizardSet.has(i) && filled[i]) {
+      g.shades[i] = { name: SHADE_NAMES[i], hex: filled[i] };
+    }
+  });
+}
+
+function wizardPickShade(idx, hex) {
+  const g = getActiveGroup();
+  if(!g) return;
+  g.shades[idx] = { name: SHADE_NAMES[idx], hex };
+  if(!g.wizardSet) g.wizardSet = new Set([4]);
+  g.wizardSet.add(idx);
+  renderEditor();
+  renderSidebar();
+  renderExport();
+}
+
+function wizardFinish() {
+  const g = getActiveGroup();
+  if(!g) return;
+  // Apply full interpolations to fill any remaining gaps
+  if(!g.wizardSet) g.wizardSet = new Set([4]);
+  const sparseShades = g.shades.map((sh, i) => g.wizardSet.has(i) ? sh.hex : null);
+  const filled = fillInterpolated(sparseShades);
+  g.shades = g.shades.map((sh, i) => ({ name: SHADE_NAMES[i], hex: filled[i] || sh.hex }));
+  g.manualMode = false;
+  g.wizardStep = 1;
+  g.wizardSet = null;
+  selectedShadeIdx = null;
+  renderEditor();
+  renderSidebar();
+  renderExport();
 }
 
 function renderPreviewCard(g) {
@@ -1450,8 +2081,9 @@ function renderPreviewCard(g) {
     const isWarn      = g.type === 'warning';
     const isHighlight = g.type === 'highlight';
 
-    const roleIcon  = isError ? iconClose : isSuccess ? iconCheck : isWarn ? iconAlert : isHighlight ? `<svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="display:inline-block;vertical-align:middle;margin-right:5px;"><path d="M6 1l1.5 3h3.2l-2.6 1.9 1 3L6 7.4l-3.1 1.5 1-3L1.3 4h3.2z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>` : iconInfo;
-    const roleLabel = isError ? 'Error — action failed' : isSuccess ? 'Success — action completed' : isWarn ? 'Warning — proceed with care' : isHighlight ? 'New feature available!' : `${g.name} alert`;
+    const iconStar = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="display:inline-block;vertical-align:middle;margin-right:5px;"><path d="M6 1l1.5 3h3.2l-2.6 1.9 1 3L6 7.4l-3.1 1.5 1-3L1.3 4h3.2z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>';
+    const roleIcon  = isError ? iconClose : isSuccess ? iconCheck : isWarn ? iconAlert : isHighlight ? iconStar : iconInfo;
+    const roleLabel = isError ? 'Error — action failed' : isSuccess ? 'Success — action completed' : isWarn ? 'Warning — proceed with care' : isHighlight ? 'New feature available!' : (g.name + ' alert');
 
     return `
       <!-- Alert banner -->
