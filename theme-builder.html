@@ -1179,10 +1179,19 @@
         <div class="type-name">Highlight</div>
         <div class="type-desc">Feature / promo badges</div>
       </div>
+      <div class="type-option" data-type="accent" onclick="selectType('accent',this)">
+        <div class="type-icon">●</div>
+        <div class="type-name">Accent</div>
+        <div class="type-desc">Anything you want</div>
+      </div>
     </div>
     <div class="form-group">
       <label class="form-label">Name</label>
       <input class="form-input" id="modalName" type="text" placeholder="e.g. Primary, Error, Warning, Success…" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Shade Count (1–9)</label>
+      <input class="form-input" id="modalShadeCount" type="number" min="1" max="9" value="9" />
     </div>
     <div class="form-group">
       <label class="form-label">Base Color (500)</label>
@@ -1202,8 +1211,10 @@
 // ==================== COLOR MATH ====================
 
 function hexToRgb(hex) {
+  if(!hex || typeof hex !== 'string') return [0,0,0];
   hex = hex.replace('#','');
   if(hex.length === 3) hex = hex.split('').map(c=>c+c).join('');
+  if(hex.length !== 6) return [0,0,0];
   const n = parseInt(hex, 16);
   return [(n>>16)&255, (n>>8)&255, n&255];
 }
@@ -1257,9 +1268,35 @@ function hexToHsl(hex) {
   return rgbToHsl(...hexToRgb(hex));
 }
 
+const SHADE_NAMES_ALL = [100,200,300,400,500,600,700,800,900];
+
+function getShadeIndices(count) {
+  const safeCount = Math.max(1, Math.min(9, count || 9));
+  if(safeCount === 1) return [4];
+  if(safeCount === 9) return [0,1,2,3,4,5,6,7,8];
+
+  const step = 8 / (safeCount - 1);
+  const idxs = Array.from({length: safeCount}, (_, i) => Math.round(i * step));
+
+  // Ensure base index (4) is included for consistent 500 shade usage
+  if(!idxs.includes(4)) {
+    const mid = Math.floor(idxs.length / 2);
+    idxs[mid] = 4;
+  }
+
+  // De-dup and sort (keep count by nudging if needed)
+  const unique = Array.from(new Set(idxs)).sort((a,b)=>a-b);
+  while(unique.length < safeCount) {
+    for(let i = 0; i < 9 && unique.length < safeCount; i++) {
+      if(!unique.includes(i)) unique.push(i);
+    }
+  }
+  return unique.slice(0, safeCount).sort((a,b)=>a-b);
+}
+
 // Smart shade generation based on Refactoring UI method
 // shades: 100(lightest) → 900(darkest), base at 500
-function generateShades(baseHex, type='primary') {
+function generateShades(baseHex, type='primary', count=9) {
   const [h,s,l] = hexToHsl(baseHex);
 
   // Lightness targets for 100-900
@@ -1286,13 +1323,53 @@ function generateShades(baseHex, type='primary') {
       Math.min(baseSat*1.05, 100),
       Math.min(baseSat*0.95, 100),
     ];
+
+    // If base is very bright, don't push extremes too far
+    const brightCompress =
+      l >= 75 ? 0.75 :
+      l >= 65 ? 0.85 :
+      l >= 55 ? 0.9 : 1;
+    if(brightCompress < 1) {
+      lightTargets = lightTargets.map(t => l + (t - l) * brightCompress);
+    }
+
+    // Enforce clear lightness ordering around the base
+    const minStep = 4;
+    lightTargets = lightTargets.map((t, i) => {
+      if(i < 4) return Math.max(t, l + (4 - i) * minStep);
+      if(i > 4) return Math.min(t, l - (i - 4) * minStep);
+      return l;
+    });
+
+    // Reduce saturation overall so shades feel calmer
+    const satReduce =
+      l >= 75 ? 0.9 :
+      l >= 65 ? 0.92 :
+      l >= 55 ? 0.95 : 0.97;
+    satTargets = satTargets.map(t => t * satReduce);
+
+    // Keep warm/low-sat colors from turning gray
+    const isWarm = h >= 15 && h <= 70;
+    const satFloor = Math.max(10, baseSat * 0.6);
+    satTargets = satTargets.map((t, i) => {
+      let v = Math.max(t, satFloor);
+      if(isWarm && baseSat < 45) {
+        const boost = i >= 4 ? 6 : 2;
+        v = Math.max(v, baseSat * 0.75 + boost);
+      }
+      return v;
+    });
   }
 
-  const names = [100,200,300,400,500,600,700,800,900];
-  return names.map((name, i) => ({
+  const shadesAll = SHADE_NAMES_ALL.map((name, i) => ({
     name,
-    hex: hslToHex(h, Math.max(0, Math.min(100, satTargets[i])), Math.max(2, Math.min(98, lightTargets[i])))
+    hex: i === 4
+      ? baseHex
+      : hslToHex(h, Math.max(0, Math.min(100, satTargets[i])), Math.max(2, Math.min(98, lightTargets[i])))
   }));
+
+  const idxs = getShadeIndices(count);
+  return idxs.map(i => shadesAll[i]);
 }
 
 // Luminance for contrast calculation
@@ -1311,10 +1388,10 @@ function uid() { return Math.random().toString(36).slice(2,8); }
 
 // ==================== GROUP MANAGEMENT ====================
 
-function addGroup(name, type, baseHex) {
+function addGroup(name, type, baseHex, shadeCount=9) {
   const id = uid();
   const genType = type === 'grey' ? 'grey' : 'primary';
-  const shades = generateShades(baseHex, genType);
+  const shades = generateShades(baseHex, genType, shadeCount);
   groups.push({ id, name, type, baseHex, shades, manualMode: false, wizardStep: 1 });
   renderSidebar();
   setActiveGroup(id);
@@ -1348,7 +1425,7 @@ function addDefaultGroups() {
   groups = [];
   activeGroupId = null;
 
-  const names = [100,200,300,400,500,600,700,800,900];
+  const names = SHADE_NAMES_ALL;
   const defaults = [
     {
       name: 'Neutral',
@@ -1360,31 +1437,31 @@ function addDefaultGroups() {
       name: 'Primary',
       type: 'primary',
       baseHex: '#6175de',
-      shades: ['#f0f4fe','#d4def8','#95aeed','#758ce0','#6175de','#495dc6','#3547a4','#253586','#253586'],
+      shades: ['#f0f4fe','#d4def8','#95aeed','#758ce0','#6175de','#495dc6','#3547a4','#253586'],
     },
     {
       name: 'Error',
       type: 'error',
       baseHex: '#b82020',
-      shades: ['#fce8e8','#f5aaaa','#e46464','#dc3030','#b82020','#891b1b','#611818','#611818','#611818'],
+      shades: ['#fce8e8','#f5aaaa','#e46464','#dc3030','#b82020','#891b1b','#611818'],
     },
     {
       name: 'Warning',
       type: 'warning',
       baseHex: '#caa53d',
-      shades: ['#fffcf4','#fdf3d7','#fae29f','#f4ca64','#caa53d','#8c6d1f','#5c4813','#5c4813','#5c4813'],
+      shades: ['#fffcf4','#fdf3d7','#fae29f','#f4ca64','#caa53d','#8c6d1f','#5c4813'],
     },
     {
       name: 'Success',
       type: 'success',
       baseHex: '#259d58',
-      shades: ['#e3fcec','#a8eec1','#74d99f','#38c172','#259d58','#197741','#145239','#145239','#145239'],
+      shades: ['#e3fcec','#a8eec1','#74d99f','#38c172','#259d58','#197741','#145239'],
     },
     {
       name: 'Highlight',
       type: 'highlight',
       baseHex: '#2a9187',
-      shades: ['#e7fffe','#a8eeeb','#6ed7d3','#3caea3','#2a9187','#1b655e','#124544','#124544','#124544'],
+      shades: ['#e7fffe','#a8eeeb','#6ed7d3','#3caea3','#2a9187','#1b655e','#124544'],
     },
   ];
 
@@ -1631,6 +1708,12 @@ function renderEditor() {
 
   const [bh,bs,bl] = hexToHsl(g.baseHex);
   const hints = typeHints[g.type] || typeHints.accent;
+  const canWizard = g.shades.length === 9;
+  if(!canWizard && g.manualMode) {
+    g.manualMode = false;
+    g.wizardStep = 1;
+    g.wizardSet = null;
+  }
 
   let tweakHtml = '';
   if(selectedShadeIdx !== null) {
@@ -1704,16 +1787,16 @@ function renderEditor() {
 
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-        <div class="card-title" style="margin-bottom:0;">9 Shades</div>
+        <div class="card-title" style="margin-bottom:0;">${g.shades.length} Shades</div>
         <div style="display:flex;align-items:center;gap:8px;">
           ${g.manualMode ? '' : `<button class="btn btn-secondary btn-sm" onclick="autoGenerate()" id="autoGenBtn">⚡ Auto-Generate Shades</button>`}
           <div class="wizard-mode-toggle">
             <button class="wizard-mode-btn ${!g.manualMode?'active':''}" onclick="setMode(false)">⚡ Auto</button>
-            <button class="wizard-mode-btn ${g.manualMode?'active':''}" onclick="setMode(true)">✏️ Manual Build</button>
+            <button class="wizard-mode-btn ${g.manualMode?'active':''}" onclick="setMode(true)" ${!canWizard ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}>✏️ Manual Build</button>
           </div>
         </div>
       </div>
-      ${g.manualMode ? renderWizard(g, hints) : renderAutoStrip(g, hints, tweakHtml)}
+      ${(g.manualMode && canWizard) ? renderWizard(g, hints) : renderAutoStrip(g, hints, tweakHtml)}
     </div>
 
     <div class="card">
@@ -1729,7 +1812,7 @@ function renderEditor() {
 
 function renderAutoStrip(g, hints, tweakHtml) {
   return `
-    <div class="shade-strip" id="shadeStrip">
+    <div class="shade-strip" id="shadeStrip" style="grid-template-columns:repeat(${g.shades.length},1fr)">
       ${g.shades.map((sh,i) => {
         const lum2 = getLuminance(sh.hex);
         const textCol = lum2 > 55 ? '#1a1a18' : '#ffffff';
@@ -1792,7 +1875,7 @@ const WIZARD_STEPS = [
 ];
 
 // Names for each index
-const SHADE_NAMES = [100,200,300,400,500,600,700,800,900];
+const SHADE_NAMES = SHADE_NAMES_ALL;
 
 // Interpolate a single missing shade between prev and next
 function interpolateShade(prevHex, nextHex, ratio) {
@@ -2069,6 +2152,7 @@ function renderWizardPreview(step, g, displayShades) {
 function setMode(manual) {
   const g = getActiveGroup();
   if(!g) return;
+  if(manual && g.shades.length !== 9) return;
   g.manualMode = manual;
   if(manual) {
     g.wizardStep = 1;
@@ -2136,8 +2220,25 @@ function wizardFinish() {
   renderExport();
 }
 
+function getNineShades(g) {
+  const n = g.shades.length;
+  if(n === 9) return g.shades;
+  if(n === 0) return Array.from({length:9}, () => ({ name: 500, hex: g.baseHex || '#000000' }));
+
+  const mapped = [];
+  for(let i = 0; i < 9; i++) {
+    const idx = n === 1 ? 0 : Math.round(i * (n - 1) / 8);
+    const sh = g.shades[idx] || g.shades[0];
+    mapped.push({
+      name: sh?.name ?? 500,
+      hex: sh?.hex || g.baseHex || '#000000',
+    });
+  }
+  return mapped;
+}
+
 function renderPreviewCard(g) {
-  const s = g.shades;
+  const s = getNineShades(g);
 
   // SVG icons (inline, tiny)
   const iconCheck = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="display:inline-block;vertical-align:middle;margin-right:4px;"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
@@ -2345,7 +2446,7 @@ function autoGenerate() {
   const g = getActiveGroup();
   if(!g) return;
   const genType = g.type === 'grey' ? 'grey' : 'primary';
-  g.shades = generateShades(g.baseHex, genType);
+  g.shades = generateShades(g.baseHex, genType, g.shades.length || 9);
   selectedShadeIdx = null;
   renderEditor();
   renderSidebar();
@@ -2404,7 +2505,7 @@ function generateMUI() {
       out += `  ${s.name}: '${s.hex}',\n`;
     });
     // Try to guess main, light, dark
-    const s = g.shades;
+    const s = getNineShades(g);
     out += `  main: '${s[4].hex}',\n`;
     out += `  light: '${s[2].hex}',\n`;
     out += `  dark: '${s[6].hex}',\n`;
@@ -2501,6 +2602,7 @@ let selectedType = 'grey';
 function openAddModal() {
   selectedType = 'grey';
   document.getElementById('modalName').value = '';
+  document.getElementById('modalShadeCount').value = 9;
   document.getElementById('modalColor').value = '#718096';
   document.getElementById('modalHex').value = '#718096';
   document.getElementById('addModal').classList.add('open');
@@ -2524,6 +2626,7 @@ function selectType(type, el) {
     warning:   { name: 'Warning',   color: '#d97706' },
     success:   { name: 'Success',   color: '#16a34a' },
     highlight: { name: 'Highlight', color: '#7c3aed' },
+    accent:    { name: 'Accent',    color: '#0ea5e9' },
   };
   const d = defaults[type];
   if(!document.getElementById('modalName').value) {
@@ -2548,8 +2651,10 @@ document.getElementById('modalColor').addEventListener('input', function(){
 function confirmAddGroup() {
   const name = document.getElementById('modalName').value.trim() || 'New Color';
   const hex = document.getElementById('modalColor').value;
+  const countRaw = parseInt(document.getElementById('modalShadeCount').value, 10);
+  const shadeCount = Math.max(1, Math.min(9, isNaN(countRaw) ? 9 : countRaw));
   closeModal();
-  addGroup(name, selectedType, hex);
+  addGroup(name, selectedType, hex, shadeCount);
 }
 
 // close modal on overlay click
