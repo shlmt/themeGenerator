@@ -913,7 +913,7 @@
     </div>
     <div class="form-group">
       <label class="form-label">Name</label>
-      <input class="form-input" id="modalName" type="text" placeholder="e.g. Blue, Red, Success..." />
+      <input class="form-input" id="modalName" type="text" placeholder="e.g. Primary, Error, Warning, Success…" />
     </div>
     <div class="form-group">
       <label class="form-label">Base Color (500)</label>
@@ -1075,11 +1075,11 @@ function getActiveGroup() {
 // ==================== DEFAULTS ====================
 
 function addDefaultGroups() {
-  addGroup('Grey', 'grey', '#718096');
-  addGroup('Blue', 'primary', '#2563eb');
-  addGroup('Red', 'accent', '#dc2626');
-  addGroup('Green', 'accent', '#16a34a');
-  addGroup('Yellow', 'accent', '#d97706');
+  addGroup('Neutral', 'grey', '#718096');
+  addGroup('Primary', 'primary', '#2563eb');
+  addGroup('Error', 'accent', '#dc2626');
+  addGroup('Success', 'accent', '#16a34a');
+  addGroup('Warning', 'accent', '#d97706');
 }
 
 function resetAll() {
@@ -1099,14 +1099,37 @@ function renderSidebar() {
     el.innerHTML = '';
     return;
   }
+
+  // Semantic role labels in sidebar
+  const roleLabel = (g) => {
+    if(g.type==='grey') return 'Neutral';
+    if(g.type==='primary') return 'Primary';
+    const lower = g.name.toLowerCase();
+    if(/(error|danger|red)/.test(lower)) return 'Error';
+    if(/(success|green)/.test(lower)) return 'Success';
+    if(/(warn|yellow|orange)/.test(lower)) return 'Warning';
+    return 'Accent';
+  };
+
+  const roleIcon = (g) => {
+    if(g.type==='grey') return '◻';
+    if(g.type==='primary') return '◆';
+    const lower = g.name.toLowerCase();
+    if(/(error|danger|red)/.test(lower)) return '✕';
+    if(/(success|green)/.test(lower)) return '✓';
+    if(/(warn|yellow|orange)/.test(lower)) return '!';
+    return '●';
+  };
+
   el.innerHTML = groups.map(g => {
     const strip = g.shades.map(s => `<span style="background:${s.hex}"></span>`).join('');
-    const typeEmoji = g.type==='grey'?'⬜':g.type==='primary'?'🔵':'✨';
     return `
     <div class="group-item ${g.id===activeGroupId?'active':''}" onclick="setActiveGroup('${g.id}')">
       <div style="flex:1;min-width:0;">
-        <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;">
-          <span class="group-name">${typeEmoji} ${g.name}</span>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+          <span style="font-size:10px;font-weight:700;font-family:'DM Mono',monospace;color:${g.id===activeGroupId?'var(--accent)':'var(--text-faint)'};">${roleIcon(g)}</span>
+          <span class="group-name">${g.name}</span>
+          <span style="font-size:9px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:1px 6px;color:var(--text-faint);font-weight:600;letter-spacing:0.3px;">${roleLabel(g)}</span>
         </div>
         <div class="group-swatch-strip">${strip}</div>
       </div>
@@ -1223,9 +1246,6 @@ function renderEditor() {
       <div>
         <div style="font-weight:600;color:var(--text);margin-bottom:4px;">${g.name} Color Scale (100–900)</div>
         <div>בחר את <strong>הצבע הבסיסי</strong> (500), ואז לחץ <strong>⚡ Auto-Generate</strong> כדי ליצור את 9 הגוונים. אחרי זה תוכל לכוונן כל גוון בנפרד ע"י לחיצה עליו.</div>
-        <div class="usage-chips" style="margin-top:6px;">
-          ${Object.entries(hints).map(([n,d])=>`<span class="chip">${n}: ${d.split(',')[0]}</span>`).join('')}
-        </div>
       </div>
     </div>
 
@@ -1251,6 +1271,7 @@ function renderEditor() {
           const lum2 = getLuminance(sh.hex);
           const textCol = lum2 > 55 ? '#1a1a18' : '#ffffff';
           const isSelected = selectedShadeIdx === i;
+          const usage = hints[sh.name] || '';
           return `
           <div class="shade-item">
             <div class="shade-swatch ${isSelected?'selected':''}" style="background:${sh.hex};" onclick="selectShade(${i})" title="${sh.name}: ${sh.hex}">
@@ -1258,6 +1279,7 @@ function renderEditor() {
             </div>
             <div class="shade-label">${sh.name}</div>
             <div class="shade-hex">${sh.hex}</div>
+            <div style="font-size:9px;color:var(--text-faint);text-align:center;line-height:1.3;margin-top:3px;word-break:break-word;">${usage}</div>
           </div>`;
         }).join('')}
       </div>
@@ -1275,40 +1297,105 @@ function renderEditor() {
 
 function renderPreviewCard(g) {
   const s = g.shades;
+
+  // SVG icons (inline, tiny)
+  const iconCheck = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="display:inline-block;vertical-align:middle;margin-right:4px;"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const iconArrow = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="display:inline-block;vertical-align:middle;margin-left:5px;"><path d="M2 6h8M7 3l3 3-3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const iconPlus  = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="display:inline-block;vertical-align:middle;margin-right:4px;"><path d="M6 2v8M2 6h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`;
+  const iconAlert = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="display:inline-block;vertical-align:middle;margin-right:5px;"><path d="M6 1L1 10h10L6 1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M6 5v2.5M6 9.2v.1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+  const iconInfo  = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="display:inline-block;vertical-align:middle;margin-right:5px;"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M6 5.5v3M6 3.5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+  const iconClose = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="display:inline-block;vertical-align:middle;margin-right:5px;"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`;
+
+  const lum500 = getLuminance(s[4].hex);
+  const btnText = lum500 > 55 ? s[8].hex : '#ffffff';
+
   if(g.type === 'grey') {
     return `
-      <div style="background:${s[0].hex};border:1px solid ${s[2].hex};border-radius:6px;padding:12px;">
-        <div style="font-size:10px;font-weight:600;color:${s[4].hex};margin-bottom:6px;">Caption</div>
-        <div style="font-size:13px;color:${s[6].hex};margin-bottom:4px;">Body text example</div>
-        <div style="font-size:15px;font-weight:600;color:${s[8].hex};">Heading text</div>
-        <div style="height:1px;background:${s[2].hex};margin:8px 0;"></div>
-        <div style="background:${s[1].hex};border-radius:4px;padding:6px 8px;border:1px solid ${s[2].hex};font-size:11px;color:${s[5].hex};">Panel / card surface</div>
+      <div style="background:${s[0].hex};border:1px solid ${s[2].hex};border-radius:6px;padding:14px;grid-column:span 2;">
+        <div style="font-size:10px;font-weight:600;color:${s[4].hex};margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">Light Mode Preview</div>
+        <div style="font-size:15px;font-weight:700;color:${s[8].hex};margin-bottom:3px;">Page heading</div>
+        <div style="font-size:13px;color:${s[6].hex};margin-bottom:10px;">Body text — secondary description goes here.</div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+          <div style="background:${s[1].hex};border:1px solid ${s[2].hex};border-radius:5px;padding:6px 12px;font-size:12px;font-weight:600;color:${s[7].hex};display:flex;align-items:center;">${iconPlus}Add item</div>
+          <div style="border:1px solid ${s[3].hex};border-radius:5px;padding:6px 12px;font-size:12px;font-weight:500;color:${s[5].hex};">Cancel</div>
+          <div style="font-size:11px;color:${s[4].hex};">● placeholder text</div>
+        </div>
+        <div style="height:1px;background:${s[2].hex};margin-bottom:10px;"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+          <div style="background:${s[1].hex};border:1px solid ${s[2].hex};border-radius:5px;padding:8px;font-size:11px;">
+            <div style="color:${s[4].hex};margin-bottom:2px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Panel</div>
+            <div style="color:${s[7].hex};font-weight:600;">Value 01</div>
+          </div>
+          <div style="background:${s[2].hex};border-radius:5px;padding:8px;font-size:11px;">
+            <div style="color:${s[5].hex};margin-bottom:2px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Panel</div>
+            <div style="color:${s[8].hex};font-weight:600;">Value 02</div>
+          </div>
+          <div style="background:${s[0].hex};border:1px dashed ${s[3].hex};border-radius:5px;padding:8px;font-size:11px;">
+            <div style="color:${s[4].hex};margin-bottom:2px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Empty</div>
+            <div style="color:${s[3].hex};font-weight:400;">—</div>
+          </div>
+        </div>
       </div>
-      <div style="background:${s[8].hex};border-radius:6px;padding:12px;">
-        <div style="font-size:10px;font-weight:600;color:${s[4].hex};margin-bottom:6px;">Dark mode</div>
-        <div style="font-size:13px;color:${s[2].hex};margin-bottom:4px;">Secondary text</div>
-        <div style="font-size:15px;font-weight:600;color:${s[0].hex};">Heading text</div>
-        <div style="height:1px;background:${s[6].hex};margin:8px 0;"></div>
-        <div style="background:${s[7].hex};border-radius:4px;padding:6px 8px;font-size:11px;color:${s[3].hex};">Dark panel</div>
+      <div style="background:${s[8].hex};border-radius:6px;padding:14px;grid-column:span 2;">
+        <div style="font-size:10px;font-weight:600;color:${s[5].hex};margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">Dark Mode Preview</div>
+        <div style="font-size:15px;font-weight:700;color:${s[0].hex};margin-bottom:3px;">Page heading</div>
+        <div style="font-size:13px;color:${s[3].hex};margin-bottom:10px;">Body text — secondary description.</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <div style="background:${s[7].hex};border-radius:5px;padding:6px 12px;font-size:12px;font-weight:600;color:${s[1].hex};display:flex;align-items:center;">${iconPlus}Add item</div>
+          <div style="border:1px solid ${s[6].hex};border-radius:5px;padding:6px 12px;font-size:12px;color:${s[3].hex};">Cancel</div>
+        </div>
       </div>`;
   } else {
+    // Determine semantic role for icon choice
+    const lower = g.name.toLowerCase();
+    const isError   = /(error|danger|red)/.test(lower);
+    const isSuccess = /(success|green)/.test(lower);
+    const isWarn    = /(warn|yellow|orange)/.test(lower);
+
+    const roleIcon  = isError ? iconClose : isSuccess ? iconCheck : isWarn ? iconAlert : iconInfo;
+    const roleLabel = isError ? 'Error message' : isSuccess ? 'Success message' : isWarn ? 'Warning' : 'Info alert';
+
     return `
-      <div style="background:${s[0].hex};border:1px solid ${s[1].hex};border-radius:6px;padding:12px;">
-        <div style="font-size:11px;color:${s[7].hex};font-weight:600;display:flex;align-items:center;gap:6px;">
-          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${s[5].hex};"></span>
-          Alert message
+      <!-- Alert banner -->
+      <div style="background:${s[0].hex};border:1px solid ${s[2].hex};border-left:3px solid ${s[5].hex};border-radius:6px;padding:12px 14px;grid-column:span 2;">
+        <div style="font-size:12px;font-weight:600;color:${s[7].hex};display:flex;align-items:center;margin-bottom:3px;">${roleIcon}${roleLabel}</div>
+        <div style="font-size:11px;color:${s[6].hex};margin-left:17px;">This is how ${s[0].hex} + ${s[7].hex} look together for an alert component.</div>
+        <div style="margin-top:8px;margin-left:17px;display:flex;gap:6px;">
+          <span style="background:${s[1].hex};border:1px solid ${s[3].hex};border-radius:4px;padding:3px 8px;font-size:10px;font-weight:600;color:${s[7].hex};display:inline-flex;align-items:center;">${iconCheck}Acknowledge</span>
+          <span style="font-size:10px;color:${s[5].hex};display:inline-flex;align-items:center;cursor:pointer;padding:3px 4px;">Dismiss ${iconArrow}</span>
         </div>
-        <div style="font-size:11px;color:${s[6].hex};margin-top:4px;">Light background usage</div>
       </div>
-      <div style="background:${s[4].hex};border-radius:6px;padding:12px;display:flex;align-items:center;justify-content:center;">
-        <span style="color:white;font-size:13px;font-weight:600;">Primary Button</span>
+
+      <!-- Filled button -->
+      <div style="background:${s[4].hex};border-radius:6px;padding:12px 16px;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="${btnText}" stroke-width="2" stroke-linecap="round"/></svg>
+        <span style="color:${btnText};font-size:13px;font-weight:600;">Primary Action</span>
       </div>
-      <div style="border:1.5px solid ${s[3].hex};border-radius:6px;padding:12px;display:flex;align-items:center;justify-content:center;">
-        <span style="color:${s[5].hex};font-size:13px;font-weight:600;">Outline Button</span>
+
+      <!-- Outline button -->
+      <div style="border:1.5px solid ${s[4].hex};border-radius:6px;padding:12px 16px;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;background:${s[0].hex};">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 3l4 4-4 4" stroke="${s[5].hex}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span style="color:${s[5].hex};font-size:13px;font-weight:600;">Secondary Action</span>
       </div>
-      <div style="background:${s[8].hex};border-radius:6px;padding:12px;">
-        <div style="font-size:11px;color:${s[2].hex};">Text on dark</div>
-        <div style="font-size:13px;font-weight:600;color:${s[0].hex};margin-top:4px;">Dark variant</div>
+
+      <!-- Badge row -->
+      <div style="grid-column:span 2;display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 0 2px;">
+        <span style="background:${s[4].hex};color:${btnText};border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:3px;">${roleIcon}Active</span>
+        <span style="background:${s[1].hex};color:${s[7].hex};border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;border:1px solid ${s[2].hex};display:inline-flex;align-items:center;gap:3px;">${roleIcon}Subtle badge</span>
+        <span style="color:${s[5].hex};font-size:11px;font-weight:500;display:inline-flex;align-items:center;gap:3px;padding:3px 0;">${roleIcon}Icon + label</span>
+        <span style="border:1.5px solid ${s[4].hex};color:${s[5].hex};border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:3px;">${roleIcon}Outlined</span>
+      </div>
+
+      <!-- Dark variant -->
+      <div style="background:${s[8].hex};border-radius:6px;padding:12px 14px;grid-column:span 2;">
+        <div style="font-size:10px;font-weight:600;color:${s[5].hex};margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">Dark / Inverted Variant</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <div style="background:${s[4].hex};border-radius:5px;padding:6px 12px;font-size:12px;font-weight:600;color:${btnText};display:flex;align-items:center;gap:5px;">
+            ${roleIcon.replace(/currentColor/g, btnText)}Action
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M7 3l3 3-3 3" stroke="${btnText}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <span style="font-size:12px;color:${s[2].hex};">Text on dark: ${s[2].hex}</span>
+        </div>
       </div>`;
   }
 }
@@ -1374,6 +1461,7 @@ function autoGenerate() {
 // ==================== EXPORT ====================
 
 function getCssVarName(groupName, shade) {
+  // Use semantic name as-is for CSS vars (primary, error, success, warning, neutral)
   return `--color-${groupName.toLowerCase().replace(/\s+/g,'-')}-${shade}`;
 }
 
@@ -1543,9 +1631,9 @@ function selectType(type, el) {
 
   // suggest default name and color
   const defaults = {
-    grey: { name: 'Grey', color: '#718096' },
-    primary: { name: 'Blue', color: '#2563eb' },
-    accent: { name: 'Green', color: '#16a34a' }
+    grey: { name: 'Neutral', color: '#718096' },
+    primary: { name: 'Primary', color: '#2563eb' },
+    accent: { name: 'Error / Success / Warning…', color: '#dc2626' }
   };
   const d = defaults[type];
   if(!document.getElementById('modalName').value) {
