@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="he" dir="ltr">
 <head>
 <meta charset="UTF-8">
@@ -1508,6 +1508,78 @@ const typeHints = {
   },
 };
 
+function clamp(val, min, max) {
+  return Math.max(min, Math.min(max, val));
+}
+
+function normalizeHueAround(value, ref) {
+  let v = value;
+  while(v - ref > 180) v -= 360;
+  while(v - ref < -180) v += 360;
+  return v;
+}
+
+function getHslRanges(g, idx, h, s, l) {
+  const prev = idx > 0 ? hexToHsl(g.shades[idx-1].hex) : null;
+  const next = idx < 8 ? hexToHsl(g.shades[idx+1].hex) : null;
+
+  // Lightness: keep ordering (100 lightest -> 900 darkest)
+  const prevL = prev ? prev[2] : 98;
+  const nextL = next ? next[2] : 2;
+  let lMin = Math.max(nextL + 2, 2);
+  let lMax = Math.min(prevL - 2, 98);
+  if(lMin > lMax) {
+    const mid = clamp(l, 2, 98);
+    lMin = mid;
+    lMax = mid;
+  }
+
+  // Saturation: gentle range around neighbors
+  let sMin = 0;
+  let sMax = 100;
+  if(prev && next) {
+    sMin = Math.max(0, Math.min(prev[1], next[1]) - 8);
+    sMax = Math.min(100, Math.max(prev[1], next[1]) + 8);
+  } else if(prev) {
+    sMin = Math.max(0, prev[1] - 12);
+    sMax = Math.min(100, prev[1] + 12);
+  } else if(next) {
+    sMin = Math.max(0, next[1] - 12);
+    sMax = Math.min(100, next[1] + 12);
+  }
+  if(sMin > sMax) {
+    const mid = clamp(s, 0, 100);
+    sMin = mid;
+    sMax = mid;
+  }
+
+  // Hue: constrain near neighbors without wrap glitches
+  let hMin = 0;
+  let hMax = 360;
+  const prevH = prev ? normalizeHueAround(prev[0], h) : null;
+  const nextH = next ? normalizeHueAround(next[0], h) : null;
+  if(prevH !== null && nextH !== null) {
+    hMin = Math.min(prevH, nextH) - 10;
+    hMax = Math.max(prevH, nextH) + 10;
+  } else if(prevH !== null) {
+    hMin = prevH - 15;
+    hMax = prevH + 15;
+  } else if(nextH !== null) {
+    hMin = nextH - 15;
+    hMax = nextH + 15;
+  }
+  if(hMin < 0 || hMax > 360) {
+    hMin = 0;
+    hMax = 360;
+  }
+
+  return {
+    h: { min: Math.round(hMin), max: Math.round(hMax) },
+    s: { min: Math.round(sMin), max: Math.round(sMax) },
+    l: { min: Math.round(lMin), max: Math.round(lMax) },
+  };
+}
+
 function renderEditor() {
   const g = getActiveGroup();
   const empty = document.getElementById('emptyState');
@@ -1533,31 +1605,40 @@ function renderEditor() {
   if(selectedShadeIdx !== null) {
     const sh = g.shades[selectedShadeIdx];
     const [h,s,l] = hexToHsl(sh.hex);
+    const ranges = getHslRanges(g, selectedShadeIdx, h, s, l);
 
-    // Compute constrained range: ±12% from neighbors (or absolute edge)
-    const prevL = selectedShadeIdx > 0 ? hexToHsl(g.shades[selectedShadeIdx-1].hex)[2] : 98;
-    const nextL = selectedShadeIdx < 8 ? hexToHsl(g.shades[selectedShadeIdx+1].hex)[2] : 2;
-    // shades go light→dark (100 is lightest = highest L)
-    const minL = Math.max(nextL + 2, 2);
-    const maxL = Math.min(prevL - 2, 98);
-    const clampedL = Math.max(minL, Math.min(maxL, l));
+    const clampedH = clamp(h, ranges.h.min, ranges.h.max);
+    const clampedS = clamp(s, ranges.s.min, ranges.s.max);
+    const clampedL = clamp(l, ranges.l.min, ranges.l.max);
+
+
 
     tweakHtml = `
-    <div class="tweak-panel">
-      <div class="tweak-title">
+    <div class=\"tweak-panel\">
+      <div class=\"tweak-title\">
         Fine-tune ${sh.name}
-        <span style="font-size:10px;color:var(--text-faint);font-weight:400;margin-left:4px;">— lightness only, range constrained between neighbors</span>
+        <span style=\"font-size:10px;color:var(--text-faint);font-weight:400;margin-left:4px;\">- HSL ranges constrained between neighbors</span>
       </div>
-      <div class="sliders">
-        <div class="slider-row">
-          <span class="slider-label">Lightness</span>
-          <input type="range" min="${minL}" max="${maxL}" value="${clampedL}" oninput="tweakShade(${selectedShadeIdx},this.value)" id="slL">
-          <span class="slider-value" id="slLv">${clampedL}%</span>
+      <div class=\"sliders\">
+        <div class=\"slider-row\">
+          <span class=\"slider-label\">Hue</span>
+          <input type=\"range\" min=\"${ranges.h.min}\" max=\"${ranges.h.max}\" value=\"${clampedH}\" oninput=\"tweakShade(${selectedShadeIdx},'h',this.value)\" id=\"slH\">
+          <span class=\"slider-value\" id=\"slHv\">${clampedH}deg</span>
+        </div>
+        <div class=\"slider-row\">
+          <span class=\"slider-label\">Saturation</span>
+          <input type=\"range\" min=\"${ranges.s.min}\" max=\"${ranges.s.max}\" value=\"${clampedS}\" oninput=\"tweakShade(${selectedShadeIdx},'s',this.value)\" id=\"slS\">
+          <span class=\"slider-value\" id=\"slSv\">${clampedS}%</span>
+        </div>
+        <div class=\"slider-row\">
+          <span class=\"slider-label\">Lightness</span>
+          <input type=\"range\" min=\"${ranges.l.min}\" max=\"${ranges.l.max}\" value=\"${clampedL}\" oninput=\"tweakShade(${selectedShadeIdx},'l',this.value)\" id=\"slL\">
+          <span class=\"slider-value\" id=\"slLv\">${clampedL}%</span>
         </div>
       </div>
-      <div style="margin-top:10px;display:flex;align-items:center;justify-content:space-between;">
-        <span style="font-size:11px;color:var(--text-muted);">Use for: <strong>${hints[sh.name]||''}</strong></span>
-        <span style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text-faint);">${sh.hex}</span>
+      <div style=\"margin-top:10px;display:flex;align-items:center;justify-content:space-between;\">
+        <span style=\"font-size:11px;color:var(--text-muted);\">Use for: <strong>${hints[sh.name]||''}</strong></span>
+        <span style=\"font-size:11px;font-family:'DM Mono',monospace;color:var(--text-faint);\">${sh.hex}</span>
       </div>
     </div>`;
   }
@@ -2137,12 +2218,26 @@ function selectShade(idx) {
   renderEditor();
 }
 
-function tweakShade(idx, val) {
+function tweakShade(idx, prop, val) {
   const g = getActiveGroup();
   if(!g) return;
   val = parseInt(val);
+
   const [h,s,l] = hexToHsl(g.shades[idx].hex);
-  g.shades[idx].hex = hslToHex(h, s, val);
+  let nh = h;
+  let ns = s;
+  let nl = l;
+
+  if(prop === 'h') nh = val;
+  if(prop === 's') ns = val;
+  if(prop === 'l') nl = val;
+
+  const ranges = getHslRanges(g, idx, nh, ns, nl);
+  nh = clamp(nh, ranges.h.min, ranges.h.max);
+  ns = clamp(ns, ranges.s.min, ranges.s.max);
+  nl = clamp(nl, ranges.l.min, ranges.l.max);
+
+  g.shades[idx].hex = hslToHex(nh, ns, nl);
 
   // update display without full re-render
   const strip = document.getElementById('shadeStrip');
@@ -2152,8 +2247,12 @@ function tweakShade(idx, val) {
     const hexes = strip.querySelectorAll('.shade-hex');
     if(hexes[idx]) hexes[idx].textContent = g.shades[idx].hex;
   }
-  const vEl = document.getElementById('slLv');
-  if(vEl) vEl.textContent = val + '%';
+  const hEl = document.getElementById('slHv');
+  if(hEl) hEl.textContent = nh + 'deg';
+  const sEl = document.getElementById('slSv');
+  if(sEl) sEl.textContent = ns + '%';
+  const lEl = document.getElementById('slLv');
+  if(lEl) lEl.textContent = nl + '%';
 
   renderSidebar();
   renderExport();
@@ -2441,3 +2540,4 @@ addDefaultGroups();
 </script>
 </body>
 </html>
+
