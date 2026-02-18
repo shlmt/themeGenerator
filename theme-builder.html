@@ -1,0 +1,1597 @@
+<!DOCTYPE html>
+<html lang="he" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Theme Builder — Refactoring UI Method</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f8f8f6;
+    --surface: #ffffff;
+    --border: #e8e8e4;
+    --border-strong: #d4d4ce;
+    --text: #1a1a18;
+    --text-muted: #6b6b65;
+    --text-faint: #a8a8a2;
+    --accent: #2563eb;
+    --accent-light: #eff6ff;
+    --danger: #dc2626;
+    --success: #16a34a;
+    --warning: #d97706;
+    --radius: 8px;
+    --radius-sm: 5px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.3px;
+  }
+
+  .badge {
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* LAYOUT */
+  .layout {
+    display: grid;
+    grid-template-columns: 240px 1fr 300px;
+    height: calc(100vh - 56px);
+    overflow: hidden;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .sidebar-section {
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 10px;
+  }
+
+  .color-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow-y: auto;
+    flex: 1;
+    padding: 8px;
+  }
+
+  .group-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.12s;
+    border: 1.5px solid transparent;
+  }
+
+  .group-item:hover { background: var(--bg); }
+  .group-item.active {
+    background: var(--accent-light);
+    border-color: rgba(37, 99, 235, 0.2);
+  }
+
+  .group-swatch-strip {
+    display: flex;
+    gap: 1.5px;
+    flex: 1;
+    height: 18px;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .group-swatch-strip span {
+    flex: 1;
+    display: block;
+  }
+
+  .group-info {
+    min-width: 0;
+  }
+
+  .group-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .group-tag {
+    font-size: 10px;
+    color: var(--text-faint);
+  }
+
+  .group-actions {
+    display: flex;
+    gap: 2px;
+    opacity: 0;
+    transition: opacity 0.12s;
+  }
+
+  .group-item:hover .group-actions { opacity: 1; }
+
+  .icon-btn {
+    width: 22px;
+    height: 22px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    transition: background 0.12s, color 0.12s;
+    font-size: 12px;
+  }
+
+  .icon-btn:hover { background: var(--border); color: var(--text); }
+  .icon-btn.danger:hover { background: #fee2e2; color: var(--danger); }
+
+  .add-group-btn {
+    margin: 8px;
+    border: 1.5px dashed var(--border-strong);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    text-align: center;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.15s;
+    background: none;
+    width: calc(100% - 16px);
+  }
+
+  .add-group-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-light);
+  }
+
+  /* MAIN EDITOR */
+  .editor {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  .editor-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+
+  .editor-title {
+    font-size: 15px;
+    font-weight: 600;
+    flex: 1;
+  }
+
+  .editor-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* CARD */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+
+  .card-title {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* BASE COLOR PICKER */
+  .base-picker-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .color-picker-wrap {
+    position: relative;
+  }
+
+  .color-picker-wrap input[type="color"] {
+    width: 52px;
+    height: 52px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    padding: 2px;
+    background: none;
+  }
+
+  .base-info {
+    flex: 1;
+  }
+
+  .base-hex {
+    font-family: 'DM Mono', monospace;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .base-hsl {
+    font-size: 11px;
+    color: var(--text-faint);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* SHADE STRIP */
+  .shade-strip {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  .shade-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .shade-swatch {
+    aspect-ratio: 1;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: transform 0.12s, box-shadow 0.12s;
+    position: relative;
+  }
+
+  .shade-swatch:hover {
+    transform: scaleY(1.15) translateY(-2px);
+    box-shadow: var(--shadow-md);
+    z-index: 2;
+  }
+
+  .shade-swatch.selected {
+    border-color: var(--text);
+    transform: scaleY(1.1) translateY(-1px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .shade-swatch input[type="color"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    border: none;
+  }
+
+  .shade-label {
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text-faint);
+    text-align: center;
+    line-height: 1;
+  }
+
+  .shade-hex {
+    font-size: 9px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text-faint);
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* TWEAK PANEL */
+  .tweak-panel {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    margin-top: 12px;
+  }
+
+  .tweak-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+
+  .sliders {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .slider-row {
+    display: grid;
+    grid-template-columns: 60px 1fr 48px;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .slider-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border);
+    cursor: pointer;
+    outline: none;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--text);
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.15);
+    transition: transform 0.1s;
+  }
+
+  input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+  }
+
+  .slider-value {
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text);
+    text-align: right;
+  }
+
+  /* HINT BOX */
+  .hint {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 12px;
+    color: #92400e;
+    line-height: 1.5;
+  }
+
+  .hint strong { font-weight: 600; }
+
+  /* PREVIEW */
+  .preview-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .preview-card {
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    font-size: 12px;
+  }
+
+  .preview-card h4 {
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    opacity: 0.7;
+  }
+
+  /* SEMANTIC INDICATORS */
+  .semantic-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .semantic-badge {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  /* RIGHT PANEL - EXPORT */
+  .export-panel {
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    padding: 0 4px;
+    flex-shrink: 0;
+    overflow-x: auto;
+  }
+
+  .tab {
+    padding: 12px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all 0.12s;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    margin-bottom: -1px;
+  }
+
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .export-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .code-block {
+    background: #1a1a18;
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: #e8e8e4;
+    line-height: 1.7;
+    overflow-x: auto;
+    white-space: pre;
+    position: relative;
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 4px;
+    color: #a8a8a2;
+    font-size: 11px;
+    padding: 3px 8px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+  }
+
+  .copy-btn:hover { background: rgba(255,255,255,0.18); color: white; }
+  .copy-btn.copied { color: #4ade80; }
+
+  /* BUTTONS */
+  .btn {
+    padding: 7px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-primary {
+    background: var(--text);
+    color: white;
+  }
+
+  .btn-primary:hover { background: #333; }
+
+  .btn-secondary {
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+  }
+
+  .btn-secondary:hover { background: var(--border); }
+
+  .btn-sm {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s;
+  }
+
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .modal {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    padding: 24px;
+    width: 420px;
+    max-width: calc(100vw - 32px);
+    transform: translateY(8px);
+    transition: transform 0.15s;
+  }
+
+  .modal-overlay.open .modal { transform: translateY(0); }
+
+  .modal h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .modal p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  .form-input {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--bg);
+    transition: border-color 0.12s;
+    outline: none;
+  }
+
+  .form-input:focus { border-color: var(--accent); }
+
+  .type-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .type-option {
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.12s;
+  }
+
+  .type-option:hover { border-color: var(--border-strong); }
+
+  .type-option.selected {
+    border-color: var(--accent);
+    background: var(--accent-light);
+  }
+
+  .type-option .type-icon { font-size: 20px; margin-bottom: 4px; }
+  .type-option .type-name { font-size: 11px; font-weight: 600; }
+  .type-option .type-desc { font-size: 10px; color: var(--text-faint); }
+
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 20px;
+  }
+
+  /* EMPTY STATE */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    text-align: center;
+    padding: 40px;
+    color: var(--text-muted);
+    gap: 12px;
+  }
+
+  .empty-icon { font-size: 48px; }
+  .empty-title { font-size: 16px; font-weight: 600; color: var(--text); }
+  .empty-desc { font-size: 13px; max-width: 280px; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+
+  /* Contrast indicator */
+  .contrast-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 3px;
+  }
+
+  .info-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-faint);
+    margin-top: 6px;
+  }
+
+  /* Tone syntax highlight */
+  .tok-comment { color: #6b7280; }
+  .tok-prop { color: #93c5fd; }
+  .tok-val { color: #86efac; }
+  .tok-str { color: #fca5a5; }
+  .tok-key { color: #fde68a; }
+  .tok-punct { color: #d1d5db; }
+
+  /* Section header in editor */
+  .section-intro {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  .section-intro-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+
+  .usage-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+  }
+
+  .chip {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 10px;
+    padding: 2px 8px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .export-info {
+    font-size: 11px;
+    color: var(--text-faint);
+    line-height: 1.5;
+    padding: 4px 0;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Auto-generate button animation */
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  .spinning { animation: spin 0.6s linear; }
+
+  /* Palette overview bar */
+  .palette-overview {
+    display: flex;
+    height: 28px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .palette-overview span {
+    flex: 1;
+    display: block;
+  }
+
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <span class="logo">🎨 Theme Builder</span>
+    <span class="badge">Refactoring UI Method</span>
+  </div>
+  <div class="header-right">
+    <button class="btn btn-secondary btn-sm" onclick="resetAll()">↺ Reset</button>
+    <button class="btn btn-primary btn-sm" onclick="showExportAll()">↓ Export All</button>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Color Groups</div>
+      <div class="hint" style="font-size:11px; padding:8px 10px;">
+        לפי Refactoring UI: צריך <strong>Greys</strong>, <strong>צבע ראשי</strong> + <strong>Accent colors</strong> — כל אחד עם 9 גוונים.
+      </div>
+    </div>
+    <div class="color-groups" id="colorGroups"></div>
+    <button class="add-group-btn" onclick="openAddModal()">+ Add Color Group</button>
+  </aside>
+
+  <!-- MAIN EDITOR -->
+  <main class="editor">
+    <div id="editorContent" style="display:flex;flex-direction:column;height:100%;overflow:hidden;">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">🎨</div>
+        <div class="empty-title">Start Building Your Palette</div>
+        <div class="empty-desc">לחץ על "Add Color Group" כדי להוסיף את הצבע הראשון. מומלץ להתחיל עם Greys.</div>
+        <button class="btn btn-primary" style="margin-top:8px;" onclick="addDefaultGroups()">✨ Start with recommended setup</button>
+      </div>
+      <div id="shadeEditor" style="display:none;flex-direction:column;height:100%;overflow:hidden;">
+        <div class="editor-header">
+          <div>
+            <div class="editor-title" id="editorGroupName">Grey</div>
+            <div style="font-size:11px; color: var(--text-faint);" id="editorGroupDesc">Text, backgrounds, panels, form controls</div>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="autoGenerate()" id="autoGenBtn">⚡ Auto-Generate Shades</button>
+        </div>
+        <div class="editor-body" id="editorBody">
+          <!-- dynamic content -->
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- RIGHT PANEL - EXPORT -->
+  <aside class="export-panel">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('css',this)">CSS Variables</button>
+      <button class="tab" onclick="switchTab('tailwind',this)">Tailwind</button>
+      <button class="tab" onclick="switchTab('mui',this)">MUI</button>
+    </div>
+    <div class="export-body" id="exportBody">
+      <div class="export-info">הצבעים יוצגו כאן לאחר שתגדיר לפחות קבוצה אחת.</div>
+    </div>
+  </aside>
+</div>
+
+<!-- ADD GROUP MODAL -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <h3>Add Color Group</h3>
+    <p>Choose the type of color group to add to your palette.</p>
+    <div class="type-grid">
+      <div class="type-option selected" data-type="grey" onclick="selectType('grey',this)">
+        <div class="type-icon">⬜</div>
+        <div class="type-name">Greys</div>
+        <div class="type-desc">UI backgrounds & text</div>
+      </div>
+      <div class="type-option" data-type="primary" onclick="selectType('primary',this)">
+        <div class="type-icon">🔵</div>
+        <div class="type-name">Primary</div>
+        <div class="type-desc">Brand color</div>
+      </div>
+      <div class="type-option" data-type="accent" onclick="selectType('accent',this)">
+        <div class="type-icon">✨</div>
+        <div class="type-name">Accent</div>
+        <div class="type-desc">Semantic / highlights</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Name</label>
+      <input class="form-input" id="modalName" type="text" placeholder="e.g. Blue, Red, Success..." />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Base Color (500)</label>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <input type="color" id="modalColor" value="#2563eb" style="width:48px;height:40px;border:1.5px solid var(--border);border-radius:6px;cursor:pointer;padding:2px;">
+        <input class="form-input" id="modalHex" type="text" placeholder="#2563eb" style="flex:1;font-family:'DM Mono',monospace;" oninput="syncModalColor()" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmAddGroup()">Add Group</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==================== COLOR MATH ====================
+
+function hexToRgb(hex) {
+  hex = hex.replace('#','');
+  if(hex.length === 3) hex = hex.split('').map(c=>c+c).join('');
+  const n = parseInt(hex, 16);
+  return [(n>>16)&255, (n>>8)&255, n&255];
+}
+
+function rgbToHex(r,g,b) {
+  return '#' + [r,g,b].map(v => Math.round(Math.max(0,Math.min(255,v))).toString(16).padStart(2,'0')).join('');
+}
+
+function rgbToHsl(r,g,b) {
+  r/=255; g/=255; b/=255;
+  const max=Math.max(r,g,b), min=Math.min(r,g,b);
+  let h,s,l=(max+min)/2;
+  if(max===min) { h=s=0; }
+  else {
+    const d=max-min;
+    s = l>0.5 ? d/(2-max-min) : d/(max+min);
+    switch(max) {
+      case r: h=((g-b)/d+(g<b?6:0))/6; break;
+      case g: h=((b-r)/d+2)/6; break;
+      case b: h=((r-g)/d+4)/6; break;
+    }
+  }
+  return [Math.round(h*360), Math.round(s*100), Math.round(l*100)];
+}
+
+function hslToRgb(h,s,l) {
+  h/=360; s/=100; l/=100;
+  let r,g,b;
+  if(s===0) { r=g=b=l; }
+  else {
+    const hue2rgb=(p,q,t)=>{
+      if(t<0)t+=1; if(t>1)t-=1;
+      if(t<1/6)return p+(q-p)*6*t;
+      if(t<1/2)return q;
+      if(t<2/3)return p+(q-p)*(2/3-t)*6;
+      return p;
+    };
+    const q=l<0.5?l*(1+s):l+s-l*s, p=2*l-q;
+    r=hue2rgb(p,q,h+1/3);
+    g=hue2rgb(p,q,h);
+    b=hue2rgb(p,q,h-1/3);
+  }
+  return [Math.round(r*255), Math.round(g*255), Math.round(b*255)];
+}
+
+function hslToHex(h,s,l) {
+  return rgbToHex(...hslToRgb(h,s,l));
+}
+
+function hexToHsl(hex) {
+  return rgbToHsl(...hexToRgb(hex));
+}
+
+// Smart shade generation based on Refactoring UI method
+// shades: 100(lightest) → 900(darkest), base at 500
+function generateShades(baseHex, type='primary') {
+  const [h,s,l] = hexToHsl(baseHex);
+
+  // Lightness targets for 100-900
+  let lightTargets, satTargets;
+
+  if(type === 'grey') {
+    lightTargets = [97, 93, 87, 79, 68, 54, 40, 28, 16];
+    // Greys: keep slight saturation for warmth
+    satTargets = Array(9).fill(Math.min(s, 15));
+  } else {
+    // For colors: spread lightness, keep hue, adjust sat
+    // 100=very light, 500=base, 900=very dark
+    lightTargets = [95, 88, 79, 68, l, Math.max(l-15,20), Math.max(l-26,14), Math.max(l-35,9), Math.max(l-42,5)];
+    // Saturation curve: lower at extremes
+    const baseSat = Math.min(s, 90);
+    satTargets = [
+      Math.min(baseSat*0.35, 40),
+      Math.min(baseSat*0.55, 55),
+      Math.min(baseSat*0.75, 70),
+      Math.min(baseSat*0.9, 80),
+      baseSat,
+      Math.min(baseSat*1.05, 95),
+      Math.min(baseSat*1.1, 100),
+      Math.min(baseSat*1.05, 100),
+      Math.min(baseSat*0.95, 100),
+    ];
+  }
+
+  const names = [100,200,300,400,500,600,700,800,900];
+  return names.map((name, i) => ({
+    name,
+    hex: hslToHex(h, Math.max(0, Math.min(100, satTargets[i])), Math.max(2, Math.min(98, lightTargets[i])))
+  }));
+}
+
+// Luminance for contrast calculation
+function getLuminance(hex) {
+  return rgbToHsl(...hexToRgb(hex))[2];
+}
+
+// ==================== STATE ====================
+
+let groups = [];
+let activeGroupId = null;
+let selectedShadeIdx = null;
+let currentTab = 'css';
+
+function uid() { return Math.random().toString(36).slice(2,8); }
+
+// ==================== GROUP MANAGEMENT ====================
+
+function addGroup(name, type, baseHex) {
+  const id = uid();
+  const shades = generateShades(baseHex, type);
+  groups.push({ id, name, type, baseHex, shades });
+  renderSidebar();
+  setActiveGroup(id);
+  renderExport();
+}
+
+function removeGroup(id) {
+  groups = groups.filter(g => g.id !== id);
+  if(activeGroupId === id) {
+    activeGroupId = groups.length ? groups[0].id : null;
+  }
+  renderSidebar();
+  renderEditor();
+  renderExport();
+}
+
+function setActiveGroup(id) {
+  activeGroupId = id;
+  selectedShadeIdx = null;
+  renderSidebar();
+  renderEditor();
+}
+
+function getActiveGroup() {
+  return groups.find(g => g.id === activeGroupId);
+}
+
+// ==================== DEFAULTS ====================
+
+function addDefaultGroups() {
+  addGroup('Grey', 'grey', '#718096');
+  addGroup('Blue', 'primary', '#2563eb');
+  addGroup('Red', 'accent', '#dc2626');
+  addGroup('Green', 'accent', '#16a34a');
+  addGroup('Yellow', 'accent', '#d97706');
+}
+
+function resetAll() {
+  if(!confirm('Reset all color groups?')) return;
+  groups = [];
+  activeGroupId = null;
+  renderSidebar();
+  renderEditor();
+  renderExport();
+}
+
+// ==================== RENDER SIDEBAR ====================
+
+function renderSidebar() {
+  const el = document.getElementById('colorGroups');
+  if(groups.length === 0) {
+    el.innerHTML = '';
+    return;
+  }
+  el.innerHTML = groups.map(g => {
+    const strip = g.shades.map(s => `<span style="background:${s.hex}"></span>`).join('');
+    const typeEmoji = g.type==='grey'?'⬜':g.type==='primary'?'🔵':'✨';
+    return `
+    <div class="group-item ${g.id===activeGroupId?'active':''}" onclick="setActiveGroup('${g.id}')">
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;">
+          <span class="group-name">${typeEmoji} ${g.name}</span>
+        </div>
+        <div class="group-swatch-strip">${strip}</div>
+      </div>
+      <div class="group-actions">
+        <button class="icon-btn danger" onclick="event.stopPropagation();removeGroup('${g.id}')" title="Delete">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ==================== RENDER EDITOR ====================
+
+const typeDescriptions = {
+  grey: 'Text, backgrounds, panels, form controls — almost everything in an interface',
+  primary: 'Used for primary actions, emphasizing navigation elements, and determining the overall look',
+  accent: 'Communicates different states: success, warning, error, or highlights a feature'
+};
+
+const typeHints = {
+  grey: {
+    100: 'Off-white backgrounds, very subtle tints',
+    200: 'Subtle backgrounds, zebra stripes',
+    300: 'Borders, dividers, disabled states',
+    400: 'Placeholder text, icons (muted)',
+    500: 'Subtext, captions, muted labels',
+    600: 'Body text (secondary)',
+    700: 'Body text (primary)',
+    800: 'Headings, strong text',
+    900: 'Darkest text, near-black',
+  },
+  primary: {
+    100: 'Tinted alert backgrounds, hover bg',
+    200: 'Chip backgrounds, tags',
+    300: 'Disabled button color',
+    400: 'Hover state of outline buttons',
+    500: 'Button background (primary), links',
+    600: 'Button hover state',
+    700: 'Darker text accents',
+    800: 'Very dark tinted backgrounds',
+    900: 'Text on light primary backgrounds',
+  },
+  accent: {
+    100: 'Alert background',
+    200: 'Hover tint',
+    300: 'Border / outline accent',
+    400: 'Secondary indicator',
+    500: 'Icon, badge background',
+    600: 'Darker badge/chip',
+    700: 'Alert text on light bg',
+    800: 'Strong text, contrast on light',
+    900: 'Darkest, for text on tinted bg',
+  }
+};
+
+function renderEditor() {
+  const g = getActiveGroup();
+  const empty = document.getElementById('emptyState');
+  const editor = document.getElementById('shadeEditor');
+
+  if(!g) {
+    empty.style.display = 'flex';
+    editor.style.display = 'none';
+    return;
+  }
+
+  empty.style.display = 'none';
+  editor.style.display = 'flex';
+
+  document.getElementById('editorGroupName').textContent = `${g.name} — ${g.type.charAt(0).toUpperCase()+g.type.slice(1)}`;
+  document.getElementById('editorGroupDesc').textContent = typeDescriptions[g.type];
+
+  const [bh,bs,bl] = hexToHsl(g.baseHex);
+  const hints = typeHints[g.type];
+
+  let tweakHtml = '';
+  if(selectedShadeIdx !== null) {
+    const sh = g.shades[selectedShadeIdx];
+    const [h,s,l] = hexToHsl(sh.hex);
+    tweakHtml = `
+    <div class="tweak-panel">
+      <div class="tweak-title">Fine-tune shade ${sh.name}</div>
+      <div class="sliders">
+        <div class="slider-row">
+          <span class="slider-label">Hue</span>
+          <input type="range" min="0" max="360" value="${h}" oninput="tweakShade(${selectedShadeIdx},'h',this.value)" id="slH">
+          <span class="slider-value" id="slHv">${h}°</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Saturation</span>
+          <input type="range" min="0" max="100" value="${s}" oninput="tweakShade(${selectedShadeIdx},'s',this.value)" id="slS">
+          <span class="slider-value" id="slSv">${s}%</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Lightness</span>
+          <input type="range" min="2" max="98" value="${l}" oninput="tweakShade(${selectedShadeIdx},'l',this.value)" id="slL">
+          <span class="slider-value" id="slLv">${l}%</span>
+        </div>
+      </div>
+      <div class="info-row" style="margin-top:10px;">
+        <span>Used for: <strong>${hints[sh.name]||''}</strong></span>
+        <span style="font-family:'DM Mono',monospace;">${sh.hex}</span>
+      </div>
+    </div>`;
+  }
+
+  // Contrast info row
+  const lum = getLuminance(g.baseHex);
+  const textContrast = lum > 55 ? 'Dark text recommended on 500' : 'Light text recommended on 500';
+
+  const body = document.getElementById('editorBody');
+  body.innerHTML = `
+    <div class="section-intro">
+      <div class="section-intro-icon">${g.type==='grey'?'🔘':g.type==='primary'?'💎':'🎯'}</div>
+      <div>
+        <div style="font-weight:600;color:var(--text);margin-bottom:4px;">${g.name} Color Scale (100–900)</div>
+        <div>בחר את <strong>הצבע הבסיסי</strong> (500), ואז לחץ <strong>⚡ Auto-Generate</strong> כדי ליצור את 9 הגוונים. אחרי זה תוכל לכוונן כל גוון בנפרד ע"י לחיצה עליו.</div>
+        <div class="usage-chips" style="margin-top:6px;">
+          ${Object.entries(hints).map(([n,d])=>`<span class="chip">${n}: ${d.split(',')[0]}</span>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Base Color (500)</div>
+      <div class="base-picker-row">
+        <div class="color-picker-wrap">
+          <input type="color" value="${g.baseHex}" oninput="updateBase(this.value)" onchange="updateBase(this.value)">
+        </div>
+        <div class="base-info">
+          <div class="base-hex">${g.baseHex}</div>
+          <div class="base-hsl">hsl(${bh}, ${bs}%, ${bl}%)</div>
+          <div style="font-size:11px;color:var(--text-faint);margin-top:2px;">${textContrast}</div>
+        </div>
+        <div style="width:80px;height:52px;border-radius:6px;background:${g.baseHex};border:1px solid rgba(0,0,0,0.08);"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">9 Shades — click to fine-tune</div>
+      <div class="shade-strip" id="shadeStrip">
+        ${g.shades.map((sh,i) => {
+          const lum2 = getLuminance(sh.hex);
+          const textCol = lum2 > 55 ? '#1a1a18' : '#ffffff';
+          const isSelected = selectedShadeIdx === i;
+          return `
+          <div class="shade-item">
+            <div class="shade-swatch ${isSelected?'selected':''}" style="background:${sh.hex};" onclick="selectShade(${i})" title="${sh.name}: ${sh.hex}">
+              ${isSelected?`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:${textCol};font-weight:600;">✓</div>`:''}
+            </div>
+            <div class="shade-label">${sh.name}</div>
+            <div class="shade-hex">${sh.hex}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      ${tweakHtml}
+    </div>
+
+    <div class="card">
+      <div class="card-title">Preview</div>
+      <div class="preview-grid">
+        ${renderPreviewCard(g)}
+      </div>
+    </div>
+  `;
+}
+
+function renderPreviewCard(g) {
+  const s = g.shades;
+  if(g.type === 'grey') {
+    return `
+      <div style="background:${s[0].hex};border:1px solid ${s[2].hex};border-radius:6px;padding:12px;">
+        <div style="font-size:10px;font-weight:600;color:${s[4].hex};margin-bottom:6px;">Caption</div>
+        <div style="font-size:13px;color:${s[6].hex};margin-bottom:4px;">Body text example</div>
+        <div style="font-size:15px;font-weight:600;color:${s[8].hex};">Heading text</div>
+        <div style="height:1px;background:${s[2].hex};margin:8px 0;"></div>
+        <div style="background:${s[1].hex};border-radius:4px;padding:6px 8px;border:1px solid ${s[2].hex};font-size:11px;color:${s[5].hex};">Panel / card surface</div>
+      </div>
+      <div style="background:${s[8].hex};border-radius:6px;padding:12px;">
+        <div style="font-size:10px;font-weight:600;color:${s[4].hex};margin-bottom:6px;">Dark mode</div>
+        <div style="font-size:13px;color:${s[2].hex};margin-bottom:4px;">Secondary text</div>
+        <div style="font-size:15px;font-weight:600;color:${s[0].hex};">Heading text</div>
+        <div style="height:1px;background:${s[6].hex};margin:8px 0;"></div>
+        <div style="background:${s[7].hex};border-radius:4px;padding:6px 8px;font-size:11px;color:${s[3].hex};">Dark panel</div>
+      </div>`;
+  } else {
+    return `
+      <div style="background:${s[0].hex};border:1px solid ${s[1].hex};border-radius:6px;padding:12px;">
+        <div style="font-size:11px;color:${s[7].hex};font-weight:600;display:flex;align-items:center;gap:6px;">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${s[5].hex};"></span>
+          Alert message
+        </div>
+        <div style="font-size:11px;color:${s[6].hex};margin-top:4px;">Light background usage</div>
+      </div>
+      <div style="background:${s[4].hex};border-radius:6px;padding:12px;display:flex;align-items:center;justify-content:center;">
+        <span style="color:white;font-size:13px;font-weight:600;">Primary Button</span>
+      </div>
+      <div style="border:1.5px solid ${s[3].hex};border-radius:6px;padding:12px;display:flex;align-items:center;justify-content:center;">
+        <span style="color:${s[5].hex};font-size:13px;font-weight:600;">Outline Button</span>
+      </div>
+      <div style="background:${s[8].hex};border-radius:6px;padding:12px;">
+        <div style="font-size:11px;color:${s[2].hex};">Text on dark</div>
+        <div style="font-size:13px;font-weight:600;color:${s[0].hex};margin-top:4px;">Dark variant</div>
+      </div>`;
+  }
+}
+
+// ==================== SHADE EDITING ====================
+
+function selectShade(idx) {
+  selectedShadeIdx = selectedShadeIdx === idx ? null : idx;
+  renderEditor();
+}
+
+function tweakShade(idx, prop, val) {
+  const g = getActiveGroup();
+  if(!g) return;
+  val = parseInt(val);
+  const [h,s,l] = hexToHsl(g.shades[idx].hex);
+  let nh=h,ns=s,nl=l;
+  if(prop==='h') nh=val;
+  else if(prop==='s') ns=val;
+  else nl=val;
+  g.shades[idx].hex = hslToHex(nh,ns,nl);
+
+  // update display without full re-render
+  const strip = document.getElementById('shadeStrip');
+  if(strip) {
+    const swatches = strip.querySelectorAll('.shade-swatch');
+    if(swatches[idx]) swatches[idx].style.background = g.shades[idx].hex;
+    const hexes = strip.querySelectorAll('.shade-hex');
+    if(hexes[idx]) hexes[idx].textContent = g.shades[idx].hex;
+  }
+  // update value displays
+  const vMap = {h:'slHv',s:'slSv',l:'slLv'};
+  const suffMap = {h:'°',s:'%',l:'%'};
+  const vEl = document.getElementById(vMap[prop]);
+  if(vEl) vEl.textContent = val + suffMap[prop];
+
+  renderSidebar();
+  renderExport();
+}
+
+function updateBase(hex) {
+  const g = getActiveGroup();
+  if(!g) return;
+  g.baseHex = hex;
+  renderEditor();
+  renderSidebar();
+  renderExport();
+}
+
+function autoGenerate() {
+  const g = getActiveGroup();
+  if(!g) return;
+  const btn = document.getElementById('autoGenBtn');
+  btn.classList.add('spinning');
+  setTimeout(() => btn.classList.remove('spinning'), 600);
+  g.shades = generateShades(g.baseHex, g.type);
+  selectedShadeIdx = null;
+  renderEditor();
+  renderSidebar();
+  renderExport();
+}
+
+// ==================== EXPORT ====================
+
+function getCssVarName(groupName, shade) {
+  return `--color-${groupName.toLowerCase().replace(/\s+/g,'-')}-${shade}`;
+}
+
+function generateCSSVars() {
+  if(!groups.length) return '/* No color groups defined yet */';
+  let out = ':root {\n';
+  groups.forEach(g => {
+    out += `  /* ${g.name} */\n`;
+    g.shades.forEach(s => {
+      const [r,gr,b] = hexToRgb(s.hex);
+      out += `  ${getCssVarName(g.name, s.name)}: ${s.hex};\n`;
+    });
+    out += '\n';
+  });
+  out += '}';
+  return out;
+}
+
+function generateTailwind() {
+  if(!groups.length) return '/* No color groups defined yet */';
+  let out = `// tailwind.config.js\n`;
+  out += `/** @type {import('tailwindcss').Config} */\n`;
+  out += `module.exports = {\n  theme: {\n    extend: {\n      colors: {\n`;
+  groups.forEach(g => {
+    const key = g.name.toLowerCase().replace(/\s+/g,'-');
+    out += `        '${key}': {\n`;
+    g.shades.forEach(s => {
+      out += `          ${s.name}: '${s.hex}',\n`;
+    });
+    out += `        },\n`;
+  });
+  out += `      },\n    },\n  },\n};\n`;
+  return out;
+}
+
+function generateMUI() {
+  if(!groups.length) return '// No color groups defined yet';
+  let out = `// theme.js — MUI createTheme palette\n`;
+  out += `import { createTheme } from '@mui/material/styles';\n\n`;
+
+  // Build color objects
+  groups.forEach(g => {
+    const key = g.name.toLowerCase().replace(/\s+/g,'-');
+    out += `const ${g.name.replace(/\s+/g,'')}Colors = {\n`;
+    g.shades.forEach(s => {
+      out += `  ${s.name}: '${s.hex}',\n`;
+    });
+    // Try to guess main, light, dark
+    const s = g.shades;
+    out += `  main: '${s[4].hex}',\n`;
+    out += `  light: '${s[2].hex}',\n`;
+    out += `  dark: '${s[6].hex}',\n`;
+    out += `  contrastText: '#ffffff',\n`;
+    out += `};\n\n`;
+  });
+
+  out += `const theme = createTheme({\n  palette: {\n`;
+
+  // Map types to MUI palette slots
+  const greyGroup = groups.find(g=>g.type==='grey');
+  const primaryGroup = groups.find(g=>g.type==='primary');
+  const accentGroups = groups.filter(g=>g.type==='accent');
+
+  if(primaryGroup) {
+    const n = primaryGroup.name.replace(/\s+/g,'');
+    out += `    primary: ${n}Colors,\n`;
+  }
+  if(accentGroups.length>0) {
+    const n = accentGroups[0].name.replace(/\s+/g,'');
+    out += `    secondary: ${n}Colors,\n`;
+  }
+  // Semantic colors: try to find by name
+  const errGroup = groups.find(g=>/(red|error|danger)/i.test(g.name));
+  const warnGroup = groups.find(g=>/(yellow|warn|orange)/i.test(g.name));
+  const succGroup = groups.find(g=>/(green|success)/i.test(g.name));
+  if(errGroup) out += `    error: ${errGroup.name.replace(/\s+/g,'')}Colors,\n`;
+  if(warnGroup) out += `    warning: ${warnGroup.name.replace(/\s+/g,'')}Colors,\n`;
+  if(succGroup) out += `    success: ${succGroup.name.replace(/\s+/g,'')}Colors,\n`;
+
+  if(greyGroup) {
+    out += `    grey: {\n`;
+    greyGroup.shades.forEach(s => {
+      out += `      ${s.name}: '${s.hex}',\n`;
+    });
+    out += `    },\n`;
+  }
+
+  out += `  },\n});\n\nexport default theme;\n`;
+  return out;
+}
+
+function renderExport() {
+  const body = document.getElementById('exportBody');
+  let code='', lang='';
+
+  if(currentTab==='css') {
+    code = generateCSSVars();
+    body.innerHTML = `
+      <div class="export-info">Copy and paste into your <strong>index.css</strong> or global stylesheet.</div>
+      <div class="code-block" id="codeOut">${escHtml(code)}<button class="copy-btn" onclick="copyCode()">Copy</button></div>
+    `;
+  } else if(currentTab==='tailwind') {
+    code = generateTailwind();
+    body.innerHTML = `
+      <div class="export-info">Place in your <strong>tailwind.config.js</strong> → <code style="font-family:'DM Mono',monospace;background:var(--bg);padding:1px 5px;border-radius:3px;">theme.extend.colors</code>.</div>
+      <div class="code-block" id="codeOut">${escHtml(code)}<button class="copy-btn" onclick="copyCode()">Copy</button></div>
+    `;
+  } else if(currentTab==='mui') {
+    code = generateMUI();
+    body.innerHTML = `
+      <div class="export-info">Import and use in your <strong>theme.js</strong> with <code style="font-family:'DM Mono',monospace;background:var(--bg);padding:1px 5px;border-radius:3px;">ThemeProvider</code>.</div>
+      <div class="code-block" id="codeOut">${escHtml(code)}<button class="copy-btn" onclick="copyCode()">Copy</button></div>
+    `;
+  }
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function switchTab(tab, btn) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderExport();
+}
+
+function copyCode() {
+  const el = document.getElementById('codeOut');
+  const text = el.textContent.replace(/^Copy$/m,'').trim();
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn = el.querySelector('.copy-btn');
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied');},2000);
+  });
+}
+
+function showExportAll() {
+  // create a combined output in a new window
+  const cssContent = `${generateCSSVars()}\n\n/* === TAILWIND (for reference) ===\n${generateTailwind()}\n*/\n\n/* === MUI (for reference) ===\n${generateMUI()}\n*/`;
+  const win = window.open('','_blank','width=700,height=600');
+  win.document.write(`<pre style="font-family:monospace;font-size:13px;padding:20px;background:#1a1a18;color:#e8e8e4;margin:0;min-height:100vh;">${escHtml(cssContent)}</pre>`);
+}
+
+// ==================== MODAL ====================
+
+let selectedType = 'grey';
+
+function openAddModal() {
+  selectedType = 'grey';
+  document.getElementById('modalName').value = '';
+  document.getElementById('modalColor').value = '#718096';
+  document.getElementById('modalHex').value = '#718096';
+  document.getElementById('addModal').classList.add('open');
+  document.getElementById('modalName').focus();
+}
+
+function closeModal() {
+  document.getElementById('addModal').classList.remove('open');
+}
+
+function selectType(type, el) {
+  selectedType = type;
+  document.querySelectorAll('.type-option').forEach(t=>t.classList.remove('selected'));
+  el.classList.add('selected');
+
+  // suggest default name and color
+  const defaults = {
+    grey: { name: 'Grey', color: '#718096' },
+    primary: { name: 'Blue', color: '#2563eb' },
+    accent: { name: 'Green', color: '#16a34a' }
+  };
+  const d = defaults[type];
+  if(!document.getElementById('modalName').value) {
+    document.getElementById('modalName').value = d.name;
+  }
+  document.getElementById('modalColor').value = d.color;
+  document.getElementById('modalHex').value = d.color;
+}
+
+function syncModalColor() {
+  let val = document.getElementById('modalHex').value.trim();
+  if(!val.startsWith('#')) val = '#'+val;
+  if(/^#[0-9a-fA-F]{6}$/.test(val)) {
+    document.getElementById('modalColor').value = val;
+  }
+}
+
+document.getElementById('modalColor').addEventListener('input', function(){
+  document.getElementById('modalHex').value = this.value;
+});
+
+function confirmAddGroup() {
+  const name = document.getElementById('modalName').value.trim() || 'New Color';
+  const hex = document.getElementById('modalColor').value;
+  closeModal();
+  addGroup(name, selectedType, hex);
+}
+
+// close modal on overlay click
+document.getElementById('addModal').addEventListener('click', function(e){
+  if(e.target===this) closeModal();
+});
+
+// keyboard
+document.addEventListener('keydown', e => {
+  if(e.key==='Escape') closeModal();
+  if(e.key==='Enter' && document.getElementById('addModal').classList.contains('open')) {
+    confirmAddGroup();
+  }
+});
+
+// ==================== INIT ====================
+
+renderSidebar();
+renderEditor();
+renderExport();
+</script>
+</body>
+</html>
