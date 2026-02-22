@@ -465,6 +465,517 @@
     opacity: 0.7;
   }
 
+  /* DULL APP PREVIEW */
+  .preview-toggle-btn {
+    margin-top: 8px;
+    font-weight: 700;
+    border: 1px solid var(--accent);
+    box-shadow: none;
+    transition: border-color 0.12s, background 0.12s, color 0.12s;
+    color: var(--accent);
+    background: var(--accent-light);
+  }
+
+  .preview-toggle-btn:hover {
+    border-color: var(--border-strong);
+    background: var(--surface-elev);
+  }
+
+  .dull-preview-header {
+    padding: 16px 24px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .dull-preview-title {
+    font-size: 17px;
+    font-weight: 600;
+  }
+
+  .dull-preview-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .preview-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+  }
+
+  .dull-preview-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    height: 100%;
+    min-height: 0;
+  }
+
+  .clean-stage {
+    position: relative;
+    min-height: 760px;
+    border-radius: 20px;
+    padding: 30px 18px 120px;
+    overflow: hidden;
+  }
+
+  .clean-stage::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 14% 10%, rgba(255,255,255,0.26), transparent 34%);
+    pointer-events: none;
+  }
+
+  .clean-status {
+    position: absolute;
+    top: 20px;
+    left: 22px;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 22px;
+    font-weight: 800;
+    z-index: 3;
+  }
+
+  .clean-chat {
+    position: relative;
+    width: 100%;
+    margin: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 250px minmax(0, 1fr);
+    min-height: 500px;
+    z-index: 2;
+  }
+
+  .clean-browser {
+    width: min(97%, 980px);
+    margin: 56px auto 0;
+    position: relative;
+    z-index: 2;
+  }
+
+  .clean-browser-shell {
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid;
+    box-shadow: 0 22px 42px rgba(0,0,0,0.2);
+    position: relative;
+  }
+
+  .clean-browser-top {
+    height: 44px;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 0 12px;
+    border-bottom: 1px solid;
+  }
+
+  .clean-browser-dots {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .clean-browser-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    border: 1px solid;
+    opacity: 0.95;
+  }
+
+  .clean-browser-tab {
+    height: 26px;
+    border-radius: 8px;
+    border: 1px solid;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 10px;
+    font-size: 11px;
+    font-weight: 600;
+    max-width: 200px;
+  }
+
+  .clean-browser-url {
+    height: 28px;
+    border-radius: 999px;
+    border: 1px solid;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 10px;
+    font-size: 11px;
+    font-weight: 500;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .clean-browser-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+  }
+
+  .clean-browser-viewport {
+    border-top: 1px solid;
+    overflow: hidden;
+  }
+
+  .clean-sidebar {
+    padding: 16px 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .clean-brand {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .clean-brand-text {
+    font-size: 20px;
+    line-height: 1;
+    font-weight: 800;
+  }
+
+  .clean-brand-caret {
+    font-size: 13px;
+    opacity: 0.8;
+  }
+
+  .clean-bell {
+    position: relative;
+    font-size: 15px;
+    opacity: 0.9;
+  }
+
+  .clean-bell-badge {
+    position: absolute;
+    top: -4px;
+    right: -5px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+  }
+
+  .clean-user {
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 14px;
+  }
+
+  .clean-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .clean-nav-item {
+    border-radius: 10px;
+    padding: 7px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    cursor: pointer;
+    transition: transform 0.12s, filter 0.12s;
+  }
+
+  .clean-nav-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .clean-nav-icon {
+    font-size: 14px;
+    width: 18px;
+    text-align: center;
+    opacity: 0.9;
+  }
+
+  .clean-nav-title {
+    margin-top: 14px;
+    margin-bottom: 4px;
+    font-size: 11px;
+    letter-spacing: 0.8px;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .clean-chip {
+    border-radius: 999px;
+    padding: 2px 5px;
+    font-size: 10px;
+    font-weight: 400;
+    line-height: 1;
+  }
+
+  .clean-main {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .clean-topbar {
+    height: 60px;
+    padding: 0 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+  }
+
+  .clean-title {
+    font-size: 16px;
+    line-height: 1;
+    font-weight: 800;
+  }
+
+  .clean-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 15px;
+    line-height: 1;
+  }
+
+  .clean-feed {
+    padding: 0 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .clean-alert {
+    margin-top: 12px;
+    border-radius: 8px;
+    padding: 6px 10px;
+    border-width: 1px;
+    border-style: solid;
+    display: grid;
+    grid-template-columns: 30px 1fr;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .clean-alert-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-size: 15px;
+    font-weight: 800;
+    display: grid;
+    place-items: center;
+    line-height: 1;
+  }
+
+  .clean-alert-title {
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .clean-alert-text {
+    margin-top: 2px;
+    font-size: 12px;
+    line-height: 1.2;
+  }
+
+  .clean-question {
+    font-size: 15px;
+    line-height: 1;
+    font-weight: 500;
+    margin-top: 2px;
+  }
+
+  .clean-message {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .clean-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border-width: 1px;
+    border-style: solid;
+  }
+
+  .clean-message-header {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .clean-message-meta {
+    font-size: 10px;
+    font-weight: 600;
+  }
+
+  .clean-message-text {
+    margin-top: 1px;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .clean-composer {
+    margin: 10px;
+    border-radius: 7px;
+    height: 40px;
+    padding: 0 8px 0 10px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    border-width: 1px;
+    border-style: solid;
+  }
+
+  .clean-composer:focus-within {
+    filter: brightness(0.98) saturate(1.08);
+  }
+
+  .clean-nav-item:hover {
+    background: rgba(255,255,255,0.1);
+    transform: translateX(2px);
+    filter: saturate(1.08) brightness(1.06);
+  }
+
+  .clean-input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: inherit;
+  }
+
+  .clean-input::placeholder {
+    opacity: 0.9;
+  }
+
+  .clean-tools {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    line-height: 1;
+  }
+
+  .clean-palette-dock {
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .clean-palette-chip {
+    width: 28px;
+    height: 28px;
+    border-radius: 5px;
+    border-width: 1px;
+    border-style: solid;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+  }
+
+  .clean-reference-mark {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    width: 0;
+    border-radius: 8px;
+    opacity: 0.17;
+    border-width: 1px;
+    border-style: solid;
+    z-index: 1;
+  }
+
+  @media (max-width: 1100px) {
+    .clean-browser {
+      width: 100%;
+      margin-top: 52px;
+    }
+
+    .clean-chat {
+      grid-template-columns: 232px minmax(0, 1fr);
+    }
+
+    .clean-title {
+      font-size: 16px;
+    }
+
+    .clean-brand-text {
+      font-size: 18px;
+    }
+  }
+
+  @media (max-width: 860px) {
+    .clean-stage {
+      padding: 18px 12px 96px;
+      min-height: 760px;
+    }
+
+    .clean-browser {
+      margin-top: 44px;
+    }
+
+    .clean-chat {
+      grid-template-columns: 1fr;
+      min-height: 600px;
+    }
+
+    .clean-sidebar {
+      border-bottom-width: 1px;
+      border-bottom-style: solid;
+    }
+
+    .clean-title {
+      font-size: 15px;
+    }
+
+    .clean-question {
+      font-size: 14px;
+    }
+  }
+
   /* SEMANTIC INDICATORS */
   .semantic-badges {
     display: flex;
@@ -1105,6 +1616,7 @@
     </div>
     <div class="color-groups" id="colorGroups"></div>
     <button class="add-group-btn" onclick="openAddModal()">+ Add Color Group</button>
+    <button class="add-group-btn preview-toggle-btn" id="dullPreviewBtn" onclick="togglePreviewMode()">View Clean App Preview</button>
   </aside>
 
   <!-- MAIN EDITOR -->
@@ -1123,6 +1635,15 @@
           </div>
         </div>
         <div class="editor-body" id="editorBody">
+          <!-- dynamic content -->
+        </div>
+      </div>
+      <div id="dullPreview" style="display:none;flex-direction:column;height:100%;overflow:hidden;">
+        <div class="dull-preview-header">
+          <div class="dull-preview-title">Clean Application Preview</div>
+          <div style="font-size:12px;color:var(--text-faint);">Reference-style layout to review hierarchy and harmony.</div>
+        </div>
+        <div class="dull-preview-body" id="dullPreviewBody">
           <!-- dynamic content -->
         </div>
       </div>
@@ -1382,6 +1903,7 @@ let groups = [];
 let activeGroupId = null;
 let selectedShadeIdx = null;
 let currentTab = 'css';
+let editorMode = 'group';
 
 function uid() { return Math.random().toString(36).slice(2,8); }
 
@@ -1409,6 +1931,7 @@ function removeGroup(id) {
 
 function setActiveGroup(id) {
   activeGroupId = id;
+  editorMode = 'group';
   selectedShadeIdx = null;
   renderSidebar();
   renderEditor();
@@ -1511,7 +2034,6 @@ function renderSidebar() {
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
           <span style="font-size:10px;font-weight:700;font-family:'DM Mono',monospace;color:${g.id===activeGroupId?'var(--accent)':'var(--text-faint)'};">${roleIcon(g)}</span>
           <span class="group-name">${g.name}</span>
-          <span style="font-size:9px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:1px 6px;color:var(--text-faint);font-weight:600;letter-spacing:0.3px;">${roleLabel(g)}</span>
         </div>
         <div class="group-swatch-strip">${strip}</div>
       </div>
@@ -1688,17 +2210,45 @@ function getHslRanges(g, idx, h, s, l) {
 }
 
 function renderEditor() {
-  const g = getActiveGroup();
   const empty = document.getElementById('emptyState');
   const editor = document.getElementById('shadeEditor');
+  const dull = document.getElementById('dullPreview');
+  const previewBtn = document.getElementById('dullPreviewBtn');
 
-  if(!g) {
+  if(previewBtn) {
+    const inPreview = editorMode === 'dull';
+    previewBtn.classList.toggle('active', inPreview);
+    previewBtn.textContent = inPreview ? 'Back to Shade Editor' : 'View Clean App Preview';
+  }
+
+  if(groups.length === 0) {
     empty.style.display = 'flex';
     editor.style.display = 'none';
+    dull.style.display = 'none';
     return;
   }
 
   empty.style.display = 'none';
+
+  if(editorMode === 'dull') {
+    editor.style.display = 'none';
+    dull.style.display = 'flex';
+    renderDullPreview();
+    return;
+  }
+
+  dull.style.display = 'none';
+
+  let g = getActiveGroup();
+  if(!g) {
+    activeGroupId = groups[0]?.id || null;
+    g = getActiveGroup();
+  }
+  if(!g) {
+    editor.style.display = 'none';
+    return;
+  }
+
   editor.style.display = 'flex';
 
   const desc = typeDescriptions[g.type] || typeDescriptions.accent;
@@ -1806,6 +2356,22 @@ function renderEditor() {
     </div>
   `;
 }
+
+function showDullPreview() {
+  editorMode = 'dull';
+  renderEditor();
+}
+
+function showShadeEditor() {
+  editorMode = 'group';
+  renderEditor();
+}
+
+function togglePreviewMode() {
+  editorMode = editorMode === 'dull' ? 'group' : 'dull';
+  renderEditor();
+}
+
 
 // ==================== AUTO STRIP ====================
 
@@ -2342,6 +2908,176 @@ function renderPreviewCard(g) {
   }
 }
 
+function pickGroupByType(type, fallbackIdx) {
+  let g = groups.find(gr => gr.type === type);
+  if(!g && typeof fallbackIdx === 'number') g = groups[fallbackIdx];
+  if(!g) g = groups[0];
+  return g || null;
+}
+
+function renderDullSwatches() {
+  return groups.map(g => {
+    const s = getNineShades(g);
+    const strip = s.map(sh => `<span style="background:${sh.hex}"></span>`).join('');
+    return `
+      <div class="dull-swatch-row">
+        <div style="color:var(--text);">${g.name}</div>
+        <div class="dull-swatch-strip">${strip}</div>
+      </div>`;
+  }).join('');
+}
+
+function renderDullPreview() {
+  const body = document.getElementById('dullPreviewBody');
+  if(!body) return;
+  if(groups.length === 0) {
+    body.innerHTML = '';
+    return;
+  }
+
+  const neutral  = pickGroupByType('grey', 0);
+  const primary  = pickGroupByType('primary', 1);
+  const success  = pickGroupByType('success', 2);
+  const warning  = pickGroupByType('warning', 3);
+  const error    = pickGroupByType('error', 4);
+  const highlight= pickGroupByType('highlight', 5);
+  const accent   = pickGroupByType('accent', 6);
+
+  const n = getNineShades(neutral);
+  const p = getNineShades(primary);
+  const s = getNineShades(success);
+  const w = getNineShades(warning);
+  const e = getNineShades(error);
+  const h = getNineShades(highlight);
+  const a = getNineShades(accent);
+
+  const cleanHtml = `
+    <div class="dull-preview-grid">
+      <div class="clean-stage" style="background:${n[1].hex};">
+        <div class="clean-status" style="background:${s[2].hex};color:${s[8].hex};">✓</div>
+
+        <div class="clean-browser">
+          <div class="clean-browser-shell" style="background:${n[2].hex};border-color:${n[4].hex};">
+            <div class="clean-browser-top" style="background:${n[1].hex};border-bottom-color:${n[3].hex};">
+              <div class="clean-browser-dots">
+                <span class="clean-browser-dot" style="background:${e[3].hex};border-color:${e[4].hex};"></span>
+                <span class="clean-browser-dot" style="background:${w[3].hex};border-color:${w[4].hex};"></span>
+                <span class="clean-browser-dot" style="background:${s[3].hex};border-color:${s[4].hex};"></span>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+                <div class="clean-browser-tab" style="background:${n[0].hex};border-color:${n[3].hex};color:${n[7].hex};">
+                  <span style="width:8px;height:8px;border-radius:50%;background:${p[5].hex};display:inline-block;"></span>
+                  <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Theme Builder Preview</span>
+                </div>
+                <div class="clean-browser-url" style="background:${n[0].hex};border-color:${n[3].hex};color:${n[6].hex};">
+                  <span style="opacity:0.8;">🔒</span>
+                  <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">themebuilder.local/preview</span>
+                </div>
+              </div>
+              <div class="clean-browser-actions" style="color:${n[6].hex};"><span>⤢</span><span>⋯</span></div>
+            </div>
+            <div class="clean-browser-viewport" style="border-top-color:${n[3].hex};">
+              <div class="clean-chat" style="background:${n[0].hex};border:1px solid ${n[2].hex};box-shadow:0 22px 36px ${n[3].hex}66;">
+          <aside class="clean-sidebar" style="background:${p[6].hex};color:${p[0].hex};">
+            <div class="clean-brand">
+              <span class="clean-brand-text">Bowen Group</span>
+              <span class="clean-brand-caret">⌄</span>
+            </div>
+            <div class="clean-user" style="color:${p[1].hex};">
+              <span class="clean-dot" style="background:${s[3].hex};"></span>
+              <span>Danial Bowen</span>
+              <span class="clean-bell" style="margin-left:auto;">🔔<span class="clean-bell-badge" style="background:${e[4].hex};border:1px solid ${n[0].hex};"></span></span>
+            </div>
+
+            <div class="clean-nav-item" style="color:${p[0].hex};"><span class="clean-nav-left"><span class="clean-nav-icon">✉</span><span>Inbox</span></span></div>
+            <div class="clean-nav-item" style="color:${p[0].hex};"><span class="clean-nav-left"><span class="clean-nav-icon">☆</span><span>Starred</span></span></div>
+
+            <div class="clean-nav-title" style="color:${p[2].hex};">Channels</div>
+            <div class="clean-nav-item" style="background:${p[8].hex};color:${p[0].hex};"><span class="clean-nav-left"><span class="clean-nav-icon">•</span><span>Design</span></span></div>
+            <div class="clean-nav-item" style="color:${p[1].hex};"><span class="clean-nav-left"><span class="clean-nav-icon">•</span><span>Engineering</span></span><span class="clean-chip" style="background:${h[2].hex};color:${h[6].hex};">4</span></div>
+            <div class="clean-nav-item" style="color:${p[1].hex};"><span class="clean-nav-left"><span class="clean-nav-icon">•</span><span>Marketing</span></span></div>
+            <div class="clean-nav-item" style="color:${p[1].hex};"><span class="clean-nav-left"><span class="clean-nav-icon">•</span><span>Support</span></span></div>
+            <div class="clean-nav-item" style="color:${p[1].hex};"><span class="clean-nav-left"><span class="clean-nav-icon">•</span><span>Sales</span></span></div>
+            <div class="clean-nav-item" style="color:${p[1].hex};"><span class="clean-nav-left"><span class="clean-nav-icon">＋</span><span>New Channel</span></span></div>
+            <div class="clean-nav-item" style="margin-top:8px;color:${p[0].hex};font-weight:700;"><span class="clean-nav-left"><span class="clean-nav-icon">▭</span><span>Archived Channels</span></span></div>
+          </aside>
+
+          <section class="clean-main" style="background:${n[0].hex};">
+            <div class="clean-topbar" style="border-bottom-color:${n[2].hex};">
+              <div class="clean-title" style="color:${n[8].hex};">Design</div>
+              <div class="clean-actions" style="color:${n[5].hex};"><span>⌕</span><span>←</span><span>→</span></div>
+            </div>
+
+            <div class="clean-feed">
+              <div class="clean-alert" style="background:${w[0].hex};border-color:${w[3].hex};color:${w[8].hex};">
+                <div class="clean-alert-icon" style="background:${w[1].hex};color:${w[6].hex};">!</div>
+                <div>
+                  <div class="clean-alert-title">Oops!</div>
+                  <div class="clean-alert-text">Sorry, there seems to be a problem with your connection.</div>
+                </div>
+              </div>
+
+              <div class="clean-question" style="color:${n[6].hex};">the notes you made?</div>
+
+              <div class="clean-message">
+                <div class="clean-avatar" style="background:${a[3].hex};border-color:${a[5].hex};"></div>
+                <div>
+                  <div class="clean-message-header"><span style="color:${n[8].hex};">Sarah Porter</span><span class="clean-message-meta" style="color:${n[5].hex};">12:48 PM</span></div>
+                  <div class="clean-message-text" style="color:${n[7].hex};">No problem! They are a bit messy at the moment. I'm just going to tidy them up a bit. I'll upload them shortly.</div>
+                </div>
+              </div>
+
+              <div class="clean-message">
+                <div class="clean-avatar" style="background:${p[1].hex};border-color:${p[3].hex};"></div>
+                <div>
+                  <div class="clean-message-header"><span style="color:${n[8].hex};">Samantha Ramos</span><span class="clean-message-meta" style="color:${n[5].hex};">12:52 PM</span></div>
+                  <div class="clean-message-text" style="color:${n[7].hex};">Did anyone take a photo of the drawings we made on the whiteboard? I'd like made a high fidelity version of that concept.</div>
+                </div>
+              </div>
+
+              <div class="clean-message">
+                <div class="clean-avatar" style="background:${p[4].hex};border-color:${p[6].hex};"></div>
+                <div>
+                  <div class="clean-message-header"><span style="color:${n[8].hex};">Tiffany Myers</span><span class="clean-message-meta" style="color:${n[5].hex};">12:51 PM</span></div>
+                  <div class="clean-message-text" style="color:${n[7].hex};"><span style="color:${p[5].hex};font-weight:800;">@samantharamos</span> yep! I put a few photos in the shared folder. Let me know if you have any questions :)</div>
+                </div>
+              </div>
+            </div>
+            <div class="clean-composer" style="background:${n[1].hex};border-color:${n[2].hex};">
+              <input class="clean-input" type="text" placeholder="Type your message" style="color:${n[8].hex};" />
+              <div class="clean-tools" style="color:${n[5].hex};"><span>@</span><span>☺</span></div>
+            </div>
+          </section>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="clean-palette-dock">
+          <span class="clean-palette-chip" style="background:${s[2].hex};border-color:${s[3].hex};"></span>
+          <span class="clean-palette-chip" style="background:${p[8].hex};border-color:${p[7].hex};"></span>
+          <span class="clean-palette-chip" style="background:${p[6].hex};border-color:${p[7].hex};"></span>
+          <span class="clean-palette-chip" style="background:${p[2].hex};border-color:${p[3].hex};"></span>
+          <span class="clean-palette-chip" style="background:${a[8].hex};border-color:${a[7].hex};"></span>
+          <span class="clean-palette-chip" style="background:${a[3].hex};border-color:${a[4].hex};"></span>
+          <span class="clean-palette-chip" style="background:${e[4].hex};border-color:${e[5].hex};"></span>
+          <span class="clean-palette-chip" style="background:${n[8].hex};border-color:${n[7].hex};"></span>
+          <span class="clean-palette-chip" style="background:${n[6].hex};border-color:${n[7].hex};"></span>
+          <span class="clean-palette-chip" style="background:${n[4].hex};border-color:${n[5].hex};"></span>
+          <span class="clean-palette-chip" style="background:${n[3].hex};border-color:${n[4].hex};"></span>
+          <span class="clean-palette-chip" style="background:${n[1].hex};border-color:${n[2].hex};"></span>
+          <span class="clean-palette-chip" style="background:${w[8].hex};border-color:${w[7].hex};"></span>
+          <span class="clean-palette-chip" style="background:${w[6].hex};border-color:${w[7].hex};"></span>
+          <span class="clean-palette-chip" style="background:${w[3].hex};border-color:${w[4].hex};"></span>
+          <span class="clean-palette-chip" style="background:${w[1].hex};border-color:${w[2].hex};"></span>
+        </div>
+      </div>
+    </div>
+  `;
+
+  body.innerHTML = cleanHtml;
+}
+
 // ==================== SHADE EDITING ====================
 
 function selectShade(idx) {
@@ -2675,4 +3411,6 @@ addDefaultGroups();
 </script>
 </body>
 </html>
+
+
 
